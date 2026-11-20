@@ -79,6 +79,32 @@ function countUp(el) {
 }
 $("stats").querySelectorAll(".stat").forEach(c => c.addEventListener("revealed", () => countUp(c.querySelector("[data-count]"))));
 
+/* ---------- 端末スペック表（名前を押すと出る） ---------- */
+const devName = (d, cls) => d.spec
+  ? `<button type="button" class="${cls} dev-name" data-dev="${D.indexOf(d)}" title="スペックを見る">${esc(d.name)}<span class="dev-i" aria-hidden="true">i</span></button>`
+  : `<span class="${cls}">${esc(d.name)}</span>`;
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-dev]"); if (!b) return;
+  const d = D[+b.dataset.dev], s = d.spec || {};
+  const row = (k, v) => v ? `<div class="sp-row"><span>${k}</span><b>${esc(v)}</b></div>` : "";
+  const m = $("modal");
+  m.classList.add("spec");
+  m.style.setProperty("--brand", color(d));
+  m.innerHTML = `
+    <div class="sp-head"><span class="sp-maker">${esc(d.maker)}</span>
+      ${d.giteki ? `<span class="badge">技適あり</span>` : ""}${d.fold ? `<span class="badge b-fold">Foldable</span>` : ""}</div>
+    <div class="sp-name">${esc(d.name)}</div>
+    <div class="sp-rows">
+      ${row("SoC", s.soc)}${row("発売", s.year && s.year + "年")}${row("カメラ", s.camera)}${row("ディスプレイ", s.display)}
+    </div>
+    ${s.point ? `<div class="sp-point"><span>ひとこと</span>${esc(s.point)}</div>` : ""}
+    <div class="m-btns"><button class="pill glass" id="spClose">閉じる</button></div>`;
+  document.body.classList.add("modal-open");
+  $("spClose").onclick = () => document.body.classList.remove("modal-open");
+});
+// 他のモーダル（SNS）を開くときはスペック表の見た目を外す
+document.addEventListener("click", e => { if (e.target.closest("[data-sns]")) $("modal").classList.remove("spec"); }, true);
+
 /* ---------- lineup ---------- */
 $("lineupDate").textContent = S.lineupDate + " 時点";
 const order = { main: 0, active: 1, away: 2 };
@@ -90,16 +116,14 @@ $("lineupGrid").innerHTML = D.filter(d => d.status !== "retired").sort((a, b) =>
     d.fold ? `<span class="badge b-fold">Foldable</span>` : "",
     d.region ? `<span class="badge">${esc(d.region)}</span>` : "",
   ].join("");
-  const phone = isMain && d.fold
-    ? `<div class="foldphone" aria-hidden="true"><div class="panel l"></div><div class="panel r"><span class="cam"></span></div></div>` : "";
   return `<div class="glass device tilt reveal ${isMain ? "main" : ""}" style="--brand:${color(d)};--d:${i}">
     ${isMain ? `<div class="glow"></div>` : ""}<span class="stripe"></span>
     <div>
       <div class="maker">${esc(d.maker)}</div>
-      <div class="name">${esc(d.name)}</div>
+      ${devName(d, "name")}
       <div class="badges">${badges}</div>
       ${d.note ? `<p class="note ${d.status === "away" ? "away-dots" : ""}">${esc(d.status === "away" ? d.note.replace(/…$/, "") : d.note)}</p>` : ""}
-    </div>${phone}
+    </div>
   </div>`;
 }).join("");
 
@@ -117,7 +141,7 @@ tl.innerHTML = D.map(d => `
   <li class="${d.status !== "retired" ? "now" : ""} ${d.giteki ? "giteki" : ""}" style="--brand:${color(d)}">
     <span class="dot"></span>
     <div class="item">
-      <span class="t-name">${esc(d.name)}</span><span class="t-maker">${esc(d.maker)}</span>
+      ${devName(d, "t-name")}<span class="t-maker">${esc(d.maker)}</span>
       <span class="t-state">${STATE[d.status] || ""}</span>
       ${d.note ? `<p class="t-note">${esc(d.note)}</p>` : ""}
     </div>
