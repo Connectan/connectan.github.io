@@ -41,7 +41,7 @@
     "id": "spotify-lyrics-sync",
     "name": "Spotify 歌詞同期",
     "status": "wip",
-    "public": true,
+    "public": false,
     "date": "",
     "repo": "",
     "page": "",
