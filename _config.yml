@@ -9,6 +9,10 @@ timezone: Asia/Tokyo
 # 記事のURL → /blog/2026/11/20/hello-world/
 permalink: /blog/:year/:month/:day/:title/
 
+# note みたいに、改行したところはそのまま改行される
+kramdown:
+  hard_wrap: true
+
 plugins:
   - jekyll-feed
 
