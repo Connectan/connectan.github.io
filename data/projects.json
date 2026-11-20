@@ -8,7 +8,11 @@
     "repo": "https://github.com/Connectan/Xperia-Watermark-For-Zeiss",
     "page": "",
     "desc": "ZEISS 搭載 Xperia で撮った写真に、Xperia × ZEISS のロゴと撮影情報（焦点距離・F値・SS・ISO・日時）の透かしを入れるアプリ。",
-    "tags": ["Android", "Kotlin", "Xperia"],
+    "tags": [
+      "Android",
+      "Kotlin",
+      "Xperia"
+    ],
     "version": "Test Beta 3",
     "download": "https://github.com/Connectan/Xperia-Watermark-For-Zeiss/releases/latest",
     "downloadLabel": "APK"
@@ -17,7 +21,7 @@
     "id": "xperia-watermark-standard",
     "name": "Xperia Watermark Standard",
     "status": "done",
-    "public": true,
+    "public": false,
     "date": "",
     "repo": "",
     "page": "",
