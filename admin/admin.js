@@ -48,11 +48,7 @@ async function unseal(data, pw) {
   } catch (e) { throw new Error("パスワードが違います"); }
 }
 function pwProblem(pw) {
-  if (pw.length < 12) return "パスワードは12文字以上にしてね";
-  if (pw.length >= 20) return "";
-  const kinds = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter(r => r.test(pw)).length;
-  if (kinds < 3) return "英大文字・小文字・数字・記号のうち3種類以上を混ぜてね（20文字以上なら何でもOK）";
-  if (/^(.)\1+$/.test(pw) || /password|qwerty|123456|connectan/i.test(pw)) return "推測されやすいパスワードです";
+  if (pw.length < 4) return "PIN は4文字以上にしてね（数字だけでもOK）";
   return "";
 }
 
@@ -102,14 +98,34 @@ async function writeJSON(path, data, message) {
   await putFile(path, b64enc(JSON.stringify(data, null, 2) + "\n"), message, f && f.sha);
 }
 
+// 暗号化したトークンは GitHub には置かず、このブラウザの中だけに保存する（＝トークンを持っている端末でしか開けない）
+const LOCAL_VAULT = "connectan-admin-vault-v2", MAX_FAILS = 10;
 async function loadVault() {
-  const f = await getFile(VAULT, { anon: true, allow404: true });
-  vault = f ? { data: JSON.parse(b64dec(f.content)), sha: f.sha } : null;
+  let data = null;
+  try { data = JSON.parse(localStorage.getItem(LOCAL_VAULT) || "null"); } catch (e) {}
+  vault = data ? { data } : null;
   return vault;
 }
-async function saveVault(data, tok, message) {
-  const res = await putFile(VAULT, b64enc(JSON.stringify(data, null, 2) + "\n"), message, vault && vault.sha, { token: tok });
-  vault = { data, sha: res.content.sha };
+async function saveVault(data) {
+  data.fails = 0;
+  localStorage.setItem(LOCAL_VAULT, JSON.stringify(data));
+  vault = { data };
+}
+function forgetDevice() { try { localStorage.removeItem(LOCAL_VAULT); } catch (e) {} vault = null; token = null; }
+// PIN を間違えた回数を数えて、MAX_FAILS 回でこの端末からトークンを消す
+async function tryUnlock(pin) {
+  await loadVault();
+  if (!vault) throw new Error("このブラウザにはトークンがありません。ページを読み込み直して、トークンを入れてね");
+  try {
+    const tok = await unseal(vault.data, pin);
+    vault.data.fails = 0; localStorage.setItem(LOCAL_VAULT, JSON.stringify(vault.data));
+    return tok;
+  } catch (e) {
+    const fails = (vault.data.fails || 0) + 1;
+    if (fails >= MAX_FAILS) { forgetDevice(); throw new Error(`${MAX_FAILS}回間違えたので、このブラウザからトークンを消しました。ページを読み込み直して、トークンを入れ直してね`); }
+    vault.data.fails = fails; localStorage.setItem(LOCAL_VAULT, JSON.stringify(vault.data));
+    throw new Error(`PIN が違います（あと ${MAX_FAILS - fails} 回）`);
+  }
 }
 
 /* ================= 画面 ================= */
@@ -164,7 +180,7 @@ $("setupBtn").onclick = () => busyBtn($("setupBtn"), async () => {
     await loadVault();
     if (vault) { err.textContent = "もう設定済みです。ページを読み込み直してログインしてね。"; return; }
     await gh("", { token: tok });
-    await saveVault(await seal(tok, p1), tok, "管理画面の初期設定");
+    await saveVault(await seal(tok, p1));
     token = tok; dropLegacy();
     ["sToken", "sPw1", "sPw2"].forEach(id => $(id).value = "");
     toast("設定しました！");
@@ -176,11 +192,10 @@ $("setupBtn").onclick = () => busyBtn($("setupBtn"), async () => {
 $("loginBtn").onclick = () => busyBtn($("loginBtn"), async () => {
   $("loginErr").textContent = ""; $("loginBtn").textContent = "確認中…";
   try {
-    await loadVault();
-    token = await unseal(vault.data, $("lPw").value);
+    token = await tryUnlock($("lPw").value);
     $("lPw").value = "";
     startIdle(); route();
-  } catch (e) { $("loginErr").textContent = e.message; $("lPw").select(); }
+  } catch (e) { $("loginErr").textContent = e.message; $("lPw").select(); if (!vault) setTimeout(() => location.reload(), 2500); }
 });
 onEnter($("lPw"), $("loginBtn"));
 
@@ -197,8 +212,8 @@ function lock() {
 }
 $("unlockBtn").onclick = () => busyBtn($("unlockBtn"), async () => {
   $("unlockErr").textContent = ""; $("unlockBtn").textContent = "確認中…";
-  try { token = await unseal(vault.data, $("uPw").value); $("uPw").value = ""; $("lock").hidden = true; startIdle(); }
-  catch (e) { $("unlockErr").textContent = e.message; }
+  try { token = await tryUnlock($("uPw").value); $("uPw").value = ""; $("lock").hidden = true; startIdle(); }
+  catch (e) { $("unlockErr").textContent = e.message; if (!vault) setTimeout(() => location.reload(), 2500); }
 });
 onEnter($("uPw"), $("unlockBtn"));
 $("lockBtn").onclick = lock;
@@ -229,9 +244,8 @@ $("changePwBtn").onclick = () => busyBtn($("changePwBtn"), async () => {
   if (p1 === p0) { err.textContent = "今と同じパスワードです"; return; }
   $("changePwBtn").textContent = "変更中…";
   try {
-    await loadVault();
-    const tok = await unseal(vault.data, p0);
-    await saveVault(await seal(tok, p1), tok, "管理画面のパスワードを変更");
+    const tok = await tryUnlock(p0);
+    await saveVault(await seal(tok, p1));
     token = tok;
     ["cPw0", "cPw1", "cPw2"].forEach(id => $(id).value = "");
     err.className = "err ok"; err.textContent = "変更しました。次回から新しいパスワードでログインしてね。";
@@ -243,15 +257,18 @@ $("changeTokBtn").onclick = () => busyBtn($("changeTokBtn"), async () => {
   if (!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(tok)) { err.textContent = "トークンの形が違うみたい"; return; }
   $("changeTokBtn").textContent = "更新中…";
   try {
-    await loadVault();
-    await unseal(vault.data, pw);
+    await tryUnlock(pw);
     await gh("", { token: tok });
-    await saveVault(await seal(tok, pw), tok, "管理画面のトークンを更新");
+    await saveVault(await seal(tok, pw));
     token = tok;
     ["tPw", "tToken"].forEach(id => $(id).value = "");
     err.className = "err ok"; err.textContent = "更新しました。";
   } catch (e) { err.textContent = e.message; }
 });
+$("forgetBtn").onclick = () => {
+  if (!confirm("このブラウザに保存しているトークンを消します。次に開くときはトークンを入れ直す必要があります。いいですか？")) return;
+  dirty = false; forgetDevice(); location.reload();
+};
 
 /* ================= front matter ================= */
 const unq = (s) => {
