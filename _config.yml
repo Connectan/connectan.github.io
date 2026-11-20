@@ -1,0 +1,24 @@
+# GitHub Pages（Jekyll）の設定。基本さわらなくてOK。
+title: こねくたん
+description: 技適なし中華スマホ沼の住人、こねくたんのブログ
+url: "https://connectan.github.io"
+baseurl: ""
+lang: ja
+timezone: Asia/Tokyo
+
+# 記事のURL → /blog/2026/11/20/hello-world/
+permalink: /blog/:year/:month/:day/:title/
+
+plugins:
+  - jekyll-feed
+
+# _posts の記事は自動で記事レイアウトを使う
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+
+exclude:
+  - README.md
