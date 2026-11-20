@@ -1,0 +1,42 @@
+[
+  {
+    "id": "xperia-watermark-zeiss",
+    "name": "Xperia Watermark For Zeiss",
+    "status": "done",
+    "public": true,
+    "date": "",
+    "repo": "",
+    "page": "",
+    "desc": "Xperia で撮った写真に ZEISS 風のウォーターマークを入れるやつ。"
+  },
+  {
+    "id": "xperia-watermark-standard",
+    "name": "Xperia Watermark Standard",
+    "status": "done",
+    "public": true,
+    "date": "",
+    "repo": "",
+    "page": "",
+    "desc": "Xperia 向けウォーターマークのスタンダード版。"
+  },
+  {
+    "id": "screen-off",
+    "name": "画面のみオフ",
+    "status": "done",
+    "public": true,
+    "date": "",
+    "repo": "",
+    "page": "",
+    "desc": "画面だけを消して、裏の動作はそのまま続けられるアプリ。"
+  },
+  {
+    "id": "spotify-lyrics-sync",
+    "name": "Spotify 歌詞同期",
+    "status": "wip",
+    "public": true,
+    "date": "",
+    "repo": "",
+    "page": "",
+    "desc": "Spotify の再生に合わせて歌詞を同期表示する。製作中。"
+  }
+]
