@@ -16,12 +16,13 @@ window.SITE = {
   lineupDate: "2026/11/20",
 
   // ---- SNS ----------------------------------------------------------
-  // name: 表示する名前 / url: プロフィールのURL（空なら、タップで名前をコピーできる表示になる）
+  // name: 表示する名前 / url: プロフィールのURL / id: コピー用ID / qr: QRコード画像
+  // url があって id が無いものはタップで直接ページへ飛ぶ（QR は横の QR ボタンで出る）
   links: {
     x:        { name: "晓玲 清風", url: "https://x.com/tooru_is_god" },
-    bilibili: { name: "お前ヤりますねぇスギ", url: "https://space.bilibili.com/3707066189351164" },
+    bilibili: { name: "晓玲清風", url: "https://space.bilibili.com/3707066189351164", qr: "/images/qr/bilibili.jpg" },
     discord:  { name: "晓玲 清風", id: "damageinc.0807", url: "" },   // id: ユーザー名 / url: サーバー招待リンクなど
-    wechat:   { name: "晓玲 清風", id: "toru_is_god", qr: "" },       // id: WeChat ID / qr: QR画像のファイル名（例: "wechat-qr.png"）
+    wechat:   { name: "晓玲 清風", id: "toru_is_god", qr: "/images/qr/wechat.jpg" },
     github:   "Connectan",                                    // GitHub のユーザー名だけ
   },
 
@@ -36,7 +37,7 @@ window.SITE = {
     { maker: "Xiaomi", name: "Xiaomi 12T Pro",     status: "retired", giteki: true,
       chapter: "技適あり時代",
       note: "最後にまともに使った技適あり。Libero Flip と2台持ち。",
-      spec: { soc: "MediaTek Dimensity 9000+", year: "2022",
+      spec: { soc: "Snapdragon 8+ Gen 1", year: "2022",
               camera: "200MP（HP1）＋ 8MP 超広角 ＋ 2MP マクロ",
               display: "6.67インチ 有機EL 120Hz",
               point: "2億画素カメラと120W急速充電。" } },
@@ -114,18 +115,7 @@ window.SITE = {
     Honor: "#00b3b3", Huawei: "#cf0a2c", Sony: "#8a8f98", ZTE: "#0a7cff",
   },
 
-  // ---- プロジェクト -------------------------------------------------
-  // status: "done" 完成 / "wip" 製作中
-  // repo  : GitHub リポジトリのURL      page: プロジェクトページのURL（ブログ記事でもOK）
-  // 入れたものだけリンクが出ます。
-  projects: [
-    { name: "Xperia Watermark For Zeiss", status: "done", repo: "", page: "",
-      desc: "Xperia で撮った写真に ZEISS 風のウォーターマークを入れるやつ。" },
-    { name: "Xperia Watermark Standard", status: "done", repo: "", page: "",
-      desc: "Xperia 向けウォーターマークのスタンダード版。" },
-    { name: "画面のみオフ", status: "done", repo: "", page: "",
-      desc: "画面だけを消して、裏の動作はそのまま続けられるアプリ。" },
-    { name: "Spotify 歌詞同期", status: "wip", repo: "", page: "",
-      desc: "Spotify の再生に合わせて歌詞を同期表示する。製作中。" },
-  ],
+  // ---- プロジェクト・お知らせ ---------------------------------------
+  // data/projects.json と data/news.json に移動しました。
+  // 管理画面（/admin/）の「プロジェクト」「お知らせ」タブから追加・編集できます。
 };

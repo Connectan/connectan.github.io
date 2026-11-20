@@ -23,6 +23,47 @@ setInterval(() => {
   setTimeout(() => prev.classList.remove("out"), 750);
 }, 2600);
 
+/* ---------- プロジェクト・お知らせは data/*.json（管理画面から編集） ---------- */
+const getJSON = (p) => fetch(U.BASE + p, { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
+const extra = Promise.all([getJSON("data/projects.json"), getJSON("data/news.json")]).then(([pj, nw]) => {
+  if (Array.isArray(pj)) S.projects = pj;
+  if (Array.isArray(nw)) S.news = nw;
+});
+
+/* ---------- お知らせ（名前の下）：記事・プロジェクト・news から新しい順に3件 ---------- */
+extra.then(() => {
+  const el = $("notice"); if (!el) return;
+  const norm = (d) => String(d || "").trim().replace(/-/g, "/");
+  const items = [];
+  (S.news || []).forEach(n => n && n.text && n.date && items.push({ date: norm(n.date), text: n.text, url: n.url || "" }));
+  (S.projects || []).forEach(p => {
+    if (p.public === false || !p.date) return;
+    items.push({ date: norm(p.date), url: p.page || p.repo || "#projects",
+      text: p.status === "wip" ? `「${p.name}」の製作を始めました` : `新しいプロジェクト「${p.name}」が完成しました` });
+  });
+  U.loadPosts().then(posts => {
+    posts.forEach(p => p.date && items.push({ date: norm(p.date), url: p.url, text: `「${p.title}」をupしました` }));
+    const list = items.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
+    if (!list.length) return;
+    el.innerHTML = `<span class="n-bell" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+      <span class="n-label mono">NEW</span>
+      <span class="n-track">${list.map((n, i) => `<a class="n-item ${i ? "" : "on"}" href="${esc(n.url || "#")}">
+        <span class="n-date mono">${esc(n.date)}</span><span class="n-text">${esc(n.text)}</span></a>`).join("")}</span>`;
+    el.hidden = false;
+    setTimeout(() => el.classList.add("show"), 30);
+    if (list.length < 2) return;
+    let ni = 0;
+    setInterval(() => {
+      if (U.prefs.anim !== "on" || el.matches(":hover")) return;
+      const its = el.querySelectorAll(".n-item"), prev = its[ni];
+      ni = (ni + 1) % its.length;
+      prev.classList.remove("on"); prev.classList.add("out");
+      its[ni].classList.remove("out"); its[ni].classList.add("on");
+      setTimeout(() => prev.classList.remove("out"), 650);
+    }, 4200);
+  });
+});
+
 /* ---------- SNS ---------- */
 const L = S.links || {};
 const SNS = [
@@ -33,23 +74,28 @@ const SNS = [
 ];
 if (L.github) SNS.push({ key: "github", title: "GitHub", color: "#6e40c9", name: "@" + L.github, url: "https://github.com/" + L.github });
 
-// URL があって ID/QR が無いものは直接リンク。それ以外はタップで詳細（名前・ID・QR・コピー）を出す
-const direct = (s) => s.url && !s.id && !s.qr;
+// URL があって ID が無いもの（X / BiliBili / GitHub）は直接リンク。それ以外はタップで詳細（名前・ID・QR・コピー）
+// 直接リンクで QR もあるもの（BiliBili）は、カードに QR ボタンを付ける
+const direct = (s) => s.url && !s.id;
 const attrs = (s, i) => direct(s) ? `href="${esc(s.url)}" target="_blank" rel="noopener"` : `href="#" data-sns="${i}"`;
+const QR_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>';
 $("heroLinks").innerHTML = SNS.map((s, i) => `<a class="pill glass" ${attrs(s, i)}>${ICON[s.key]}${s.title}</a>`).join("");
 $("followGrid").innerHTML = SNS.map((s, i) => `
-  <a class="sns glass tilt reveal" style="--d:${i}" ${attrs(s, i)}>
-    <div class="ic" style="--c:${s.color}">${ICON[s.key]}</div>
-    <div><b>${s.title}</b><br><span>${esc(s.name || "")}</span></div>
-  </a>`).join("");
+  <div class="sns glass tilt reveal" style="--d:${i}">
+    <a class="sns-main" ${attrs(s, i)}>
+      <div class="ic" style="--c:${s.color}">${ICON[s.key]}</div>
+      <div><b>${s.title}</b><br><span>${esc(s.name || "")}</span></div>
+    </a>
+    ${s.qr ? `<button type="button" class="qr-btn" data-sns="${i}" aria-label="${s.title} の QR コード">${QR_ICON}QR</button>` : ""}
+  </div>`).join("");
 document.addEventListener("click", e => {
   const a = e.target.closest("[data-sns]"); if (!a) return;
   e.preventDefault();
   const s = SNS[+a.dataset.sns];
   U.openModal({
     icon: s.key, color: s.color, title: s.title, name: s.name, qr: s.qr, url: s.url,
-    sub: s.id ? "ID: " + s.id : (s.url ? "" : "この名前で検索してね"),
-    copy: s.id || s.name,
+    sub: s.id ? "ID: " + s.id : (s.url || s.qr ? "" : "この名前で検索してね"),
+    copy: s.id || (s.url ? "" : s.name),
   });
 });
 
@@ -165,16 +211,22 @@ U.loadPosts().then(posts => {
   U.reveal($("blog"));
 });
 
-/* ---------- projects ---------- */
-const P = S.projects || [];
+/* ---------- projects（public: false は出さない） ---------- */
+extra.then(() => {
+const P = (S.projects || []).filter(p => p.public !== false);
 const projCard = (p, i) => {
   const links = [
+    p.download ? `<a class="dl" href="${esc(p.download)}" target="_blank" rel="noopener">⬇ ${esc(p.downloadLabel || "ダウンロード")}</a>` : "",
     p.page ? `<a href="${esc(p.page)}">詳細ページ →</a>` : "",
     p.repo ? `<a href="${esc(p.repo)}" target="_blank" rel="noopener">GitHub →</a>` : "",
   ].join("");
+  const img = p.image ? `<span class="p-img" style="--bg:url('${esc(p.image).replace(/'/g, "%27")}')"><img src="${esc(p.image)}" alt="" loading="lazy"></span>` : "";
+  const tags = (p.tags || []).map(t => `<span class="badge">#${esc(t)}</span>`).join("");
   return `<div class="glass project tilt reveal" style="--d:${i}">
-    <h3>${esc(p.name)}</h3>
+    ${img}
+    <h3>${esc(p.name)}${p.version ? ` <small class="p-ver mono">${esc(p.version)}</small>` : ""}</h3>
     <p>${esc(p.desc)}</p>
+    ${tags ? `<div class="p-tags">${tags}</div>` : ""}
     <div class="meta">
       <span class="badge ${p.status === "wip" ? "b-wip" : "b-done"}">${p.status === "wip" ? "製作中" : "完成"}</span>
       ${links || `<span class="soon">ページ準備中</span>`}
@@ -185,6 +237,8 @@ const done = P.filter(p => p.status !== "wip"), wip = P.filter(p => p.status ===
 $("projectWrap").innerHTML =
   (done.length ? `<div class="proj-group reveal">作ったもの</div><div class="projects">${done.map(projCard).join("")}</div>` : "") +
   (wip.length ? `<div class="proj-group reveal">製作中</div><div class="projects">${wip.map(projCard).join("")}</div>` : "");
+U.reveal($("projects"));
+});
 
 U.reveal();
 })();

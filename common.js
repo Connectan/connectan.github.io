@@ -204,7 +204,8 @@ function loadPosts() {
 }
 function postCard(p, { big = false, d = 0 } = {}) {
   const tags = (p.tags || []).map(t => `<span class="badge">#${esc(t)}</span>`).join("");
-  const cover = big && p.cover ? `<img class="cover" src="${esc(p.cover)}" alt="" loading="lazy">` : "";
+  const cover = big && p.cover
+    ? `<span class="cover" style="--bg:url('${esc(p.cover).replace(/'/g, "%27")}')"><img src="${esc(p.cover)}" alt="" loading="lazy"></span>` : "";
   return `<a class="glass post-card tilt reveal ${big ? "big" : ""} ${cover ? "has-cover" : ""}" href="${esc(p.url)}" style="--d:${d}">
     <div style="display:flex;flex-direction:column;gap:8px">
       <div class="p-tags">${p.pinned ? `<span class="badge b-pick">おすすめ</span>` : ""}<span class="p-date mono">${esc(p.date)}</span></div>
