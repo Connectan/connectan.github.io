@@ -23,7 +23,7 @@
     "id": "screen-off",
     "name": "画面のみオフ",
     "status": "done",
-    "public": true,
+    "public": false,
     "date": "",
     "repo": "",
     "page": "",
