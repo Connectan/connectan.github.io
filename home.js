@@ -23,7 +23,7 @@ setInterval(() => {
   setTimeout(() => prev.classList.remove("out"), 750);
 }, 2600);
 
-/* ---------- プロジェクト・お知らせは data/*.json（管理画面から編集） ---------- */
+/* ---------- プロジェクト・お知らせは data/*.json ---------- */
 const getJSON = (p) => fetch(U.BASE + p, { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
 const extra = Promise.all([getJSON("data/projects.json"), getJSON("data/news.json")]).then(([pj, nw]) => {
   if (Array.isArray(pj)) S.projects = pj;
