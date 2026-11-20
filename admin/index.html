@@ -31,8 +31,8 @@
   <!-- 初期設定 -->
   <div id="vSetup" hidden>
     <div class="glass panel">
-      <h2>管理画面の初期設定</h2>
-      <p class="muted">最初の1回だけ。GitHub のトークンを、パスワードで暗号化して保存します。以後はパスワードだけでログインできます。</p>
+      <h2>このブラウザで管理画面を使う</h2>
+      <p class="muted">GitHub のトークンを入れてください。トークンは PIN で暗号化して<b>このブラウザの中だけ</b>に保存します（GitHub やほかの端末には置きません）。次からは PIN だけで開けます。トークンを持っていない人は開けません。</p>
       <ol>
         <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">トークン作成ページ</a>を開く（Fine-grained token）</li>
         <li><b>Resource owner</b> が <b>Connectan</b> になっているか確認</li>
@@ -41,10 +41,10 @@
         <li><b>Permissions</b> → <b>Repository permissions</b> → <b>Contents</b> を <b>Read and write</b> に<br><span class="muted">← ここが「Read-only」や未設定だと 403 になります</span></li>
         <li><b>Generate token</b> → 出てきた <code>github_pat_…</code> を下に貼る</li>
       </ol>
-      <p class="err ok" id="legacyNote" hidden>✅ 前の管理画面で使っていたトークンが、このブラウザに残っていたので入れておきました。パスワードを決めるだけで OK です（入れた後、このブラウザからは消します）。</p>
+      <p class="err ok" id="legacyNote" hidden>✅ 前の管理画面で使っていたトークンが、このブラウザに残っていたので入れておきました。PIN を決めるだけで OK です（暗号化して保存し直します）。</p>
       <div class="field">GitHub トークン<input type="password" id="sToken" autocomplete="off" spellcheck="false" placeholder="github_pat_..."></div>
-      <div class="field">管理画面のパスワード<input type="password" id="sPw1" autocomplete="new-password"></div>
-      <div class="field">パスワード（もう一度）<input type="password" id="sPw2" autocomplete="new-password"></div>
+      <div class="field">PIN（4文字以上・数字だけでもOK）<input type="password" id="sPw1" autocomplete="new-password" inputmode="numeric"></div>
+      <div class="field">PIN（もう一度）<input type="password" id="sPw2" autocomplete="new-password" inputmode="numeric"></div>
       <button class="btn primary" id="setupBtn">設定する</button>
       <div class="err" id="setupErr"></div>
     </div>
@@ -54,7 +54,7 @@
   <div id="vLogin" hidden>
     <div class="glass panel login">
       <h2>🔒 管理画面</h2>
-      <div class="field">パスワード<input type="password" id="lPw" autocomplete="current-password"></div>
+      <div class="field">PIN<input type="password" id="lPw" autocomplete="current-password" inputmode="numeric"></div>
       <button class="btn primary" id="loginBtn">ログイン</button>
       <div class="err" id="loginErr"></div>
     </div>
@@ -143,17 +143,17 @@
   <!-- 設定 -->
   <div id="vSettings" hidden>
     <div class="glass panel">
-      <h3>パスワードを変更</h3>
-      <div class="field">今のパスワード<input type="password" id="cPw0" autocomplete="current-password"></div>
-      <div class="field">新しいパスワード<input type="password" id="cPw1" autocomplete="new-password"></div>
-      <div class="field">新しいパスワード（もう一度）<input type="password" id="cPw2" autocomplete="new-password"></div>
+      <h3>PIN を変更</h3>
+      <div class="field">今の PIN<input type="password" id="cPw0" autocomplete="current-password" inputmode="numeric"></div>
+      <div class="field">新しい PIN（4文字以上）<input type="password" id="cPw1" autocomplete="new-password" inputmode="numeric"></div>
+      <div class="field">新しい PIN（もう一度）<input type="password" id="cPw2" autocomplete="new-password" inputmode="numeric"></div>
       <button class="btn primary" id="changePwBtn">変更する</button>
       <div class="err" id="changePwErr"></div>
     </div>
     <div class="glass panel">
       <h3>GitHub トークンを更新</h3>
       <p class="muted">トークンの期限が切れたときや、作り直したときに。</p>
-      <div class="field">パスワード<input type="password" id="tPw" autocomplete="current-password"></div>
+      <div class="field">PIN<input type="password" id="tPw" autocomplete="current-password" inputmode="numeric"></div>
       <div class="field">新しいトークン<input type="password" id="tToken" autocomplete="off" spellcheck="false" placeholder="github_pat_..."></div>
       <button class="btn primary" id="changeTokBtn">更新する</button>
       <div class="err" id="changeTokErr"></div>
@@ -161,10 +161,12 @@
     <div class="glass panel muted small">
       <b class="t">セキュリティについて</b>
       <ul>
-        <li>トークンは AES-256-GCM で暗号化して <code>admin/vault.json</code> に保存。鍵はパスワードから PBKDF2（100万回）で作ります。</li>
+        <li>トークンは AES-256-GCM で暗号化して<b>このブラウザの中だけ</b>に保存。GitHub（公開リポジトリ）には何も置きません。</li>
+        <li>新しい端末では、トークンを入れないと絶対に開けません。</li>
+        <li>PIN を10回間違えると、この端末からトークンを消します。</li>
         <li>ログイン中もトークンはメモリの中だけ。ページを閉じる・30分操作しない・ロックで消えます。</li>
-        <li>パスワードは12文字以上で、英大文字・小文字・数字・記号のうち3種類以上（20文字以上ならOK）。</li>
       </ul>
+      <button class="btn danger" id="forgetBtn">このブラウザからトークンを消す</button>
     </div>
   </div>
 
@@ -225,7 +227,7 @@
   <div class="glass panel login">
     <h2>🔒 ロックしました</h2>
     <p class="muted">しばらく操作がなかったので。書きかけの内容はそのまま残っています。</p>
-    <div class="field">パスワード<input type="password" id="uPw" autocomplete="current-password"></div>
+    <div class="field">PIN<input type="password" id="uPw" autocomplete="current-password" inputmode="numeric"></div>
     <button class="btn primary" id="unlockBtn">ロック解除</button>
     <div class="err" id="unlockErr"></div>
   </div>
