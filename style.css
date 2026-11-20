@@ -378,3 +378,26 @@ body.modal-open .modal { transform: none; opacity: 1; pointer-events: auto; }
   .pager { grid-template-columns: 1fr; }
   .pager .next { grid-column: 1; }
 }
+/* ================= device spec sheet ================= */
+.dev-name { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: left;
+  display: inline-flex; align-items: center; gap: 8px; }
+.device .dev-name { display: flex; margin: 2px 0 10px; }
+.device.main .dev-name { margin: 6px 0 14px; }
+.dev-name:hover { color: var(--brand, var(--accent)); }
+.dev-i { flex: none; width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center;
+  font: italic 700 11px/1 Georgia, serif; color: var(--muted); border: 1.5px solid currentColor; opacity: .6; transition: opacity .3s, transform .4s cubic-bezier(.3,1.6,.5,1); }
+.device.main .dev-i { width: 24px; height: 24px; font-size: 14px; }
+.dev-name:hover .dev-i { opacity: 1; transform: scale(1.15); color: var(--brand, var(--accent)); }
+#modal.spec { width: min(460px, calc(100vw - 32px)); text-align: left; padding: 26px 26px 20px; overflow: hidden; }
+#modal.spec::before { opacity: .9; }
+#modal.spec .sp-head { display: flex; gap: 6px; align-items: center; }
+#modal.spec .sp-maker { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--brand); font-weight: 700; margin-right: auto; }
+#modal.spec .sp-name { font-size: 26px; font-weight: 900; line-height: 1.25; margin: 4px 0 16px; }
+#modal.spec .sp-rows { display: grid; border-top: 1px solid var(--line); }
+#modal.spec .sp-row { display: grid; grid-template-columns: 92px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+#modal.spec .sp-row span { color: var(--muted); font-size: 12px; padding-top: 2px; }
+#modal.spec .sp-row b { font-weight: 700; line-height: 1.6; }
+#modal.spec .sp-point { margin-top: 14px; padding: 14px 16px; border-radius: 14px; font-weight: 700; line-height: 1.6;
+  background: color-mix(in srgb, var(--brand) 14%, transparent); border: 1px solid color-mix(in srgb, var(--brand) 35%, transparent); }
+#modal.spec .sp-point span { display: block; font-size: 11px; letter-spacing: .15em; color: var(--brand); margin-bottom: 2px; }
+#modal.spec .m-btns { justify-content: flex-end; }
