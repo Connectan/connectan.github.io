@@ -114,7 +114,7 @@ const io = new IntersectionObserver(es => es.forEach(e => {
   e.target.classList.add("in");
   e.target.dispatchEvent(new CustomEvent("revealed"));
   io.unobserve(e.target);
-}), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+}), { threshold: 0, rootMargin: "0px 0px -60px 0px" });
 function reveal(scope = document) {
   scope.querySelectorAll(".reveal:not([data-obs])").forEach(el => { el.dataset.obs = 1; io.observe(el); });
 }
