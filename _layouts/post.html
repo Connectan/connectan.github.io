@@ -15,6 +15,18 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Noto+Sans+SC:wght@400;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ '/style.css' | relative_url }}">
+<style>
+  .toc { margin: 26px 0 8px; padding: 18px 22px; border-radius: 16px; background: rgba(var(--edge), .14); border: 1px solid var(--line); }
+  .toc b { font-size: 14px; }
+  .toc ol { margin: 8px 0 0; padding-left: 1.4em; font-size: 14.5px; line-height: 1.9; }
+  .toc a { color: var(--text); text-decoration: none; }
+  .toc a:hover { color: var(--accent); }
+  .prose h2 { scroll-margin-top: 90px; }
+  .embed { margin: 1.4em auto; display: flex; justify-content: center; }
+  .embed.yt { position: relative; aspect-ratio: 16 / 9; width: 100%; }
+  .embed.yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 14px; }
+  .prose img + em, .prose p > img:only-child + br + em { display: block; text-align: center; font-size: 13px; color: var(--muted); font-style: normal; }
+</style>
 </head>
 <body data-page="blog">
 
@@ -46,5 +58,36 @@
 
 <script src="{{ '/data.js' | relative_url }}"></script>
 <script src="{{ '/common.js' | relative_url }}"></script>
+<script>
+(() => {
+  const prose = document.querySelector(".prose");
+  // URL だけの段落を埋め込みに（X / YouTube）
+  let needX = false;
+  prose.querySelectorAll("p").forEach(p => {
+    if (p.querySelector("img")) return;
+    const t = p.textContent.trim().replace(/^<|>$/g, "");
+    let m;
+    if ((m = t.match(/^https?:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/\w+\/status\/(\d+)\S*$/))) {
+      const dark = getComputedStyle(document.documentElement).colorScheme === "dark";
+      p.outerHTML = `<div class="embed"><blockquote class="twitter-tweet" data-dnt="true" data-theme="${dark ? "dark" : "light"}"><a href="https://twitter.com/i/status/${m[1]}">${t}</a></blockquote></div>`;
+      needX = true;
+    } else if ((m = t.match(/^https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/)|youtu\.be\/)([\w-]{11})\S*$/))) {
+      p.outerHTML = `<div class="embed yt"><iframe src="https://www.youtube-nocookie.com/embed/${m[1]}" loading="lazy" allowfullscreen allow="encrypted-media; picture-in-picture"></iframe></div>`;
+    }
+  });
+  if (needX) { const s = document.createElement("script"); s.src = "https://platform.twitter.com/widgets.js"; s.async = true; document.body.appendChild(s); }
+
+  // 見出しが3つ以上あれば目次を自動で作る
+  const hs = [...prose.querySelectorAll("h2")];
+  if (hs.length >= 3) {
+    hs.forEach((h, i) => { if (!h.id) h.id = "h-" + (i + 1); });
+    const toc = document.createElement("nav");
+    toc.className = "toc";
+    toc.innerHTML = "<b>目次</b><ol>" + hs.map(h => `<li><a href="#${encodeURIComponent(h.id)}">${UI.esc(h.textContent)}</a></li>`).join("") + "</ol>";
+    const first = prose.querySelector("h2");
+    first.parentNode.insertBefore(toc, first);
+  }
+})();
+</script>
 </body>
 </html>
