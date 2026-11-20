@@ -43,8 +43,8 @@
       </ol>
       <p class="err ok" id="legacyNote" hidden>✅ 前の管理画面で使っていたトークンが、このブラウザに残っていたので入れておきました。PIN を決めるだけで OK です（暗号化して保存し直します）。</p>
       <div class="field">GitHub トークン<input type="password" id="sToken" autocomplete="off" spellcheck="false" placeholder="github_pat_..."></div>
-      <div class="field">PIN（4文字以上・数字だけでもOK）<input type="password" id="sPw1" autocomplete="new-password" inputmode="numeric"></div>
-      <div class="field">PIN（もう一度）<input type="password" id="sPw2" autocomplete="new-password" inputmode="numeric"></div>
+      <div class="field">PIN（4文字以上・数字だけでもOK）<input type="password" id="sPw1" autocomplete="new-password"></div>
+      <div class="field">PIN（もう一度）<input type="password" id="sPw2" autocomplete="new-password"></div>
       <button class="btn primary" id="setupBtn">設定する</button>
       <div class="err" id="setupErr"></div>
     </div>
@@ -54,7 +54,7 @@
   <div id="vLogin" hidden>
     <div class="glass panel login">
       <h2>🔒 管理画面</h2>
-      <div class="field">PIN<input type="password" id="lPw" autocomplete="current-password" inputmode="numeric"></div>
+      <div class="field">PIN<input type="password" id="lPw" autocomplete="current-password"></div>
       <button class="btn primary" id="loginBtn">ログイン</button>
       <div class="err" id="loginErr"></div>
     </div>
@@ -144,16 +144,16 @@
   <div id="vSettings" hidden>
     <div class="glass panel">
       <h3>PIN を変更</h3>
-      <div class="field">今の PIN<input type="password" id="cPw0" autocomplete="current-password" inputmode="numeric"></div>
-      <div class="field">新しい PIN（4文字以上）<input type="password" id="cPw1" autocomplete="new-password" inputmode="numeric"></div>
-      <div class="field">新しい PIN（もう一度）<input type="password" id="cPw2" autocomplete="new-password" inputmode="numeric"></div>
+      <div class="field">今の PIN<input type="password" id="cPw0" autocomplete="current-password"></div>
+      <div class="field">新しい PIN（4文字以上）<input type="password" id="cPw1" autocomplete="new-password"></div>
+      <div class="field">新しい PIN（もう一度）<input type="password" id="cPw2" autocomplete="new-password"></div>
       <button class="btn primary" id="changePwBtn">変更する</button>
       <div class="err" id="changePwErr"></div>
     </div>
     <div class="glass panel">
       <h3>GitHub トークンを更新</h3>
       <p class="muted">トークンの期限が切れたときや、作り直したときに。</p>
-      <div class="field">PIN<input type="password" id="tPw" autocomplete="current-password" inputmode="numeric"></div>
+      <div class="field">PIN<input type="password" id="tPw" autocomplete="current-password"></div>
       <div class="field">新しいトークン<input type="password" id="tToken" autocomplete="off" spellcheck="false" placeholder="github_pat_..."></div>
       <button class="btn primary" id="changeTokBtn">更新する</button>
       <div class="err" id="changeTokErr"></div>
@@ -227,7 +227,7 @@
   <div class="glass panel login">
     <h2>🔒 ロックしました</h2>
     <p class="muted">しばらく操作がなかったので。書きかけの内容はそのまま残っています。</p>
-    <div class="field">PIN<input type="password" id="uPw" autocomplete="current-password" inputmode="numeric"></div>
+    <div class="field">PIN<input type="password" id="uPw" autocomplete="current-password"></div>
     <button class="btn primary" id="unlockBtn">ロック解除</button>
     <div class="err" id="unlockErr"></div>
   </div>
