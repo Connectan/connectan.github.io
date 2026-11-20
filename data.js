@@ -18,10 +18,10 @@ window.SITE = {
   // ---- SNS ----------------------------------------------------------
   // name: 表示する名前 / url: プロフィールのURL（空なら、タップで名前をコピーできる表示になる）
   links: {
-    x:        { name: "晓玲 清風", url: "" },                 // 例: "https://x.com/xxxx"
-    bilibili: { name: "お前ヤりますねぇスギ", url: "" },       // 例: "https://space.bilibili.com/12345678"
-    discord:  { name: "晓玲 清風", id: "", url: "" },         // id: ユーザー名 / url: サーバー招待リンクなど
-    wechat:   { name: "晓玲 清風", id: "", qr: "" },          // id: WeChat ID / qr: QR画像のファイル名（例: "wechat-qr.png"）
+    x:        { name: "晓玲 清風", url: "https://x.com/tooru_is_god" },
+    bilibili: { name: "お前ヤりますねぇスギ", url: "https://space.bilibili.com/3707066189351164" },
+    discord:  { name: "晓玲 清風", id: "damageinc.0807", url: "" },
+    wechat:   { name: "晓玲 清風", id: "toru_is_god", qr: "" },
     github:   "Connectan",                                    // GitHub のユーザー名だけ
   },
 
