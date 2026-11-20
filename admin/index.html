@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="ja" data-glass="liquid" data-wall="aurora" data-anim="on">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>管理画面 | こねくたん</title>
+<meta name="site-base" content="/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Noto+Sans+SC:wght@400;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://uicdn.toast.com/editor/3.2.2/toastui-editor.min.css">
+<link rel="stylesheet" href="https://uicdn.toast.com/editor/3.2.2/theme/toastui-editor-dark.min.css">
+<link rel="stylesheet" href="/style.css">
+<style>
+  [hidden] { display: none !important; }
+  .admin { max-width: 820px; padding-top: 100px; padding-bottom: 80px; }
+  .panel { padding: 26px; margin-bottom: 16px; }
+  .panel h2 { font-size: 22px; margin: 0 0 6px; }
+  .panel ol { padding-left: 1.3em; margin: 10px 0 16px; color: var(--muted); font-size: 14px; }
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; font-size: 13px; color: var(--muted); }
+  .field input[type=text], .field input[type=password], .field input[type=date] {
+    font: inherit; font-size: 15px; color: var(--text); padding: 10px 14px; border-radius: 12px;
+    border: 1px solid var(--line); background: rgba(var(--g-rgb), .6); outline: none; }
+  .field input:focus { border-color: var(--accent); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 999px; border: 0; font: inherit;
+    font-size: 14px; font-weight: 700; cursor: pointer; color: var(--text); text-decoration: none; }
+  .btn.primary { background: var(--accent); color: #fff; box-shadow: 0 6px 18px -6px var(--accent); }
+  .btn.danger { color: #d33; }
+  .btn:disabled { opacity: .5; cursor: wait; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .spacer { flex: 1; }
+  .err { color: #d33; font-size: 14px; margin-top: 8px; min-height: 1em; }
+
+  /* list */
+  .plist { display: grid; gap: 10px; }
+  .pitem { padding: 16px 20px; display: flex; gap: 14px; align-items: center; cursor: pointer; }
+  .pitem .t { font-weight: 700; flex: 1; min-width: 0; }
+  .pitem .t small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; }
+  .pitem .badge { flex: none; }
+
+  /* editor (note-like) */
+  .ebar { position: sticky; top: 76px; z-index: 20; padding: 10px 12px; border-radius: 999px; display: flex; gap: 8px; align-items: center; margin-bottom: 18px; }
+  .ebar .state { font-size: 12px; color: var(--muted); margin-left: 6px; }
+  .sheet { padding: clamp(18px, 4vw, 40px); }
+  #fTitle { width: 100%; border: 0; outline: 0; background: none; resize: none; overflow: hidden; color: var(--text);
+    font: 900 clamp(24px, 4.5vw, 34px)/1.4 "Zen Kaku Gothic New", "Noto Sans SC", sans-serif; padding: 0; margin-bottom: 8px; }
+  #fTitle::placeholder { color: var(--muted); opacity: .6; }
+  details.meta { margin: 6px 0 18px; font-size: 14px; }
+  details.meta summary { cursor: pointer; color: var(--muted); user-select: none; }
+  details.meta .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; margin-top: 14px; }
+  .cover-pv { width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; margin-top: 6px; display: none; }
+  .switchrow { display: flex; align-items: center; gap: 10px; color: var(--text); font-size: 14px; margin-bottom: 14px; }
+
+  /* toast ui を馴染ませる */
+  .toastui-editor-defaultUI { border: 0 !important; background: transparent; }
+  .toastui-editor-defaultUI .toastui-editor-toolbar { position: sticky; top: 140px; z-index: 10; border-radius: 14px; overflow: hidden; }
+  .toastui-editor-defaultUI-toolbar { border-radius: 14px; background: rgba(var(--g-rgb), .85) !important; border: 1px solid var(--line) !important; }
+  .toastui-editor-main, .toastui-editor-ww-container, .toastui-editor-md-container { background: transparent !important; }
+  .toastui-editor-contents { font-family: "Zen Kaku Gothic New", "Noto Sans SC", sans-serif !important; font-size: 16.5px !important; line-height: 1.95 !important; }
+  .toastui-editor-contents p { margin: 0 0 .6em !important; }
+  .toastui-editor-contents img { border-radius: 12px; max-width: 100%; }
+  .toastui-editor-mode-switch { background: transparent !important; border: 0 !important; }
+  .embed-btn { width: auto !important; padding: 0 8px !important; font-size: 12px !important; font-weight: 700; color: #555 !important; background: none !important; }
+  .toastui-editor-dark .embed-btn { color: #ddd !important; }
+  .dropmask { position: fixed; inset: 0; z-index: 80; display: none; place-items: center; background: rgba(0,0,0,.35); color: #fff; font-size: 22px; font-weight: 900; pointer-events: none; }
+  body.dragging .dropmask { display: grid; }
+  @media (max-width: 640px) { details.meta .grid { grid-template-columns: 1fr; } .ebar { border-radius: 20px; } }
+</style>
+</head>
+<body data-page="admin">
+
+<main class="wrap admin">
+
+  <!-- ログイン -->
+  <div id="vLogin" hidden>
+    <div class="glass panel">
+      <h2>管理画面にログイン</h2>
+      <p style="color:var(--muted);font-size:14px;margin:0">GitHub のトークンでログインします。トークンはこのブラウザの中にだけ保存されます。</p>
+      <ol>
+        <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">トークン作成ページ</a>を開く</li>
+        <li>Token name は何でもOK、Expiration は好みで（No expiration も可）</li>
+        <li>Repository access → <b>Only select repositories</b> → <b>connectan.github.io</b></li>
+        <li>Permissions → Repository permissions → <b>Contents</b> を <b>Read and write</b></li>
+        <li>Generate token → 出てきた <code>github_pat_…</code> をコピーして下に貼る</li>
+      </ol>
+      <div class="field">トークン<input type="password" id="token" autocomplete="off" placeholder="github_pat_..."></div>
+      <button class="btn primary" id="loginBtn">ログイン</button>
+      <div class="err" id="loginErr"></div>
+    </div>
+  </div>
+
+  <!-- 記事一覧 -->
+  <div id="vList" hidden>
+    <div class="row" style="margin-bottom:18px">
+      <h2 style="margin:0">記事</h2>
+      <span class="spacer"></span>
+      <a class="btn glass" href="/blog/" target="_blank">ブログを見る</a>
+      <button class="btn primary" id="newBtn">＋ 新しい記事</button>
+    </div>
+    <div class="plist" id="plist"><div class="glass panel" style="color:var(--muted)">読み込み中…</div></div>
+    <div class="row" style="margin-top:24px">
+      <span class="spacer"></span>
+      <button class="btn glass" id="logoutBtn">ログアウト</button>
+    </div>
+  </div>
+
+  <!-- エディタ -->
+  <div id="vEdit" hidden>
+    <div class="ebar glass">
+      <button class="btn" id="backBtn">← 一覧</button>
+      <span class="state" id="state"></span>
+      <span class="spacer"></span>
+      <button class="btn danger" id="delBtn" hidden>削除</button>
+      <button class="btn glass" id="draftBtn">下書き保存</button>
+      <button class="btn primary" id="pubBtn">公開する</button>
+    </div>
+    <div class="glass sheet">
+      <textarea id="fTitle" rows="1" placeholder="記事タイトル"></textarea>
+      <details class="meta" id="meta">
+        <summary>記事の設定（タグ・おすすめ・URL・アイキャッチ）</summary>
+        <div class="grid">
+          <div class="field">タグ（カンマ区切り）<input type="text" id="fTags" placeholder="Honor, レビュー"></div>
+          <div class="field">日付<input type="date" id="fDate"></div>
+          <div class="field">URL（英数字とハイフン）<input type="text" id="fSlug" placeholder="honor-x50-pro-review"></div>
+          <div class="field">説明文（空なら本文の最初から自動）<input type="text" id="fDesc"></div>
+        </div>
+        <label class="switchrow"><button class="tog" id="fPinned" type="button" aria-pressed="false"></button>トップページで「おすすめ」に出す</label>
+        <div class="field">アイキャッチ画像
+          <div class="row"><button class="btn glass" type="button" id="coverBtn">画像を選ぶ</button><button class="btn" type="button" id="coverDel" hidden>外す</button></div>
+          <input type="file" id="coverFile" accept="image/*" hidden>
+          <img class="cover-pv" id="coverPv" alt="">
+        </div>
+      </details>
+      <div id="editor"></div>
+    </div>
+  </div>
+
+</main>
+<div class="dropmask">ここにドロップして画像を挿入</div>
+
+<script src="/data.js"></script>
+<script src="/common.js"></script>
+<script src="https://uicdn.toast.com/editor/3.2.2/toastui-editor-all.min.js"></script>
+<script src="https://uicdn.toast.com/editor/3.2.2/i18n/ja-jp.min.js"></script>
+<script>
+(() => {
+const OWNER = "Connectan", REPO = "connectan.github.io", BRANCH = "main";
+const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
+const RAW = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}`;
+const DEMO = location.hostname === "localhost" && location.search.includes("demo"); // ローカル確認用
+const U = window.UI, $ = (id) => document.getElementById(id), esc = U.esc;
+const toast = U.toast;
+
+let token = "";
+try { token = localStorage.getItem("gh_token") || ""; } catch (e) {}
+
+/* ---------- GitHub API ---------- */
+async function gh(path, opts = {}) {
+  if (DEMO) return demoApi(path, opts);
+  const r = await fetch(API + path, {
+    method: opts.method || "GET", cache: "no-store",
+    headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + token, "X-GitHub-Api-Version": "2022-11-28",
+               ...(opts.body ? { "Content-Type": "application/json" } : {}) },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (r.status === 404 && opts.allow404) return null;
+  if (!r.ok) {
+    const j = await r.json().catch(() => ({}));
+    throw new Error(`${r.status} ${j.message || ""}`);
+  }
+  return r.status === 204 ? null : r.json();
+}
+const encPath = (p) => p.split("/").map(encodeURIComponent).join("/");
+const putFile = (path, content, message, sha) =>
+  gh(`/contents/${encPath(path)}`, { method: "PUT", body: { message, content, branch: BRANCH, ...(sha ? { sha } : {}) } });
+const delFile = (path, sha, message) =>
+  gh(`/contents/${encPath(path)}`, { method: "DELETE", body: { message, sha, branch: BRANCH } });
+
+function b64enc(str) {
+  const bytes = new TextEncoder().encode(str); let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+const b64dec = (b) => new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\s/g, "")), c => c.charCodeAt(0)));
+const blobB64 = (blob) => new Promise((res, rej) => {
+  const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(",")[1]); fr.onerror = rej; fr.readAsDataURL(blob);
+});
+
+/* ---------- front matter ---------- */
+const unq = (s) => {
+  s = s.trim();
+  if (s.startsWith('"') && s.endsWith('"')) return s.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+  if (s.startsWith("'") && s.endsWith("'")) return s.slice(1, -1).replace(/''/g, "'");
+  return s.replace(/\s+#.*$/, "");
+};
+function parseFM(text) {
+  const m = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!m) return { meta: {}, body: text };
+  const meta = {}; let last = null;
+  m[1].split(/\r?\n/).forEach(line => {
+    const li = line.match(/^\s+-\s+(.*)$/);
+    if (li && last) { (Array.isArray(meta[last]) ? meta[last] : (meta[last] = [])).push(unq(li[1])); return; }
+    const kv = line.match(/^([\w-]+):\s*(.*)$/); if (!kv) return;
+    last = kv[1]; const v = kv[2].trim();
+    if (v.startsWith("[")) meta[last] = v.replace(/^\[|\]\s*(#.*)?$/g, "").split(",").map(unq).filter(Boolean);
+    else if (v === "") meta[last] = [];
+    else if (/^(true|false)(\s+#.*)?$/.test(v)) meta[last] = v.startsWith("true");
+    else meta[last] = unq(v);
+  });
+  return { meta, body: m[2] };
+}
+const yq = (s) => '"' + String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
+function buildFM(m) {
+  const L = ["---", `title: ${yq(m.title)}`];
+  if (m.tags.length) L.push(`tags: [${m.tags.map(yq).join(", ")}]`);
+  if (m.pinned) L.push("pinned: true");
+  if (m.cover) L.push(`cover: ${yq(m.cover)}`);
+  if (m.description) L.push(`description: ${yq(m.description)}`);
+  L.push("---");
+  return L.join("\n");
+}
+const toRaw = (s) => String(s || "").split("(/images/").join(`(${RAW}/images/`);
+const fromRaw = (s) => String(s || "").split(`${RAW}/images/`).join("/images/");
+
+/* ---------- views ---------- */
+function show(v) { ["vLogin", "vList", "vEdit"].forEach(id => $(id).hidden = id !== v); scrollTo(0, 0); }
+
+async function boot() {
+  if (!token && !DEMO) { show("vLogin"); return; }
+  try {
+    const repo = await gh("");
+    if (!DEMO && !(repo.permissions && repo.permissions.push)) throw new Error("このトークンには書き込み権限がありません（Contents: Read and write にしてね）");
+    route();
+  } catch (e) {
+    show("vLogin"); $("loginErr").textContent = "ログインできませんでした: " + e.message;
+  }
+}
+$("loginBtn").onclick = async () => {
+  token = $("token").value.trim(); if (!token) return;
+  try { localStorage.setItem("gh_token", token); } catch (e) {}
+  $("token").value = ""; $("loginErr").textContent = "";
+  boot();
+};
+$("logoutBtn").onclick = () => { try { localStorage.removeItem("gh_token"); } catch (e) {} token = ""; show("vLogin"); };
+
+function route() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  if (h === "new") openEditor(null);
+  else if (h.startsWith("edit=")) openEditor(h.slice(5));
+  else listPosts();
+}
+addEventListener("hashchange", () => { if (token || DEMO) route(); });
+
+/* ---------- list ---------- */
+async function listPosts() {
+  show("vList");
+  const [posts, drafts] = await Promise.all([gh("/contents/_posts", { allow404: true }), gh("/contents/_drafts", { allow404: true })]);
+  const files = [...(drafts || []).map(f => ({ ...f, draft: true })), ...(posts || []).map(f => ({ ...f, draft: false }))]
+    .filter(f => f.name.endsWith(".md"));
+  if (!files.length) { $("plist").innerHTML = `<div class="glass panel" style="color:var(--muted)">まだ記事がありません。「＋ 新しい記事」から書けます。</div>`; return; }
+  const full = await Promise.all(files.map(async f => {
+    const j = await gh(`/contents/${encPath(f.path)}`);
+    return { ...f, meta: parseFM(b64dec(j.content)).meta };
+  }));
+  full.sort((a, b) => (b.draft - a.draft) || b.name.localeCompare(a.name));
+  $("plist").innerHTML = full.map(f => `
+    <a class="glass pitem tilt" href="#edit=${encodeURIComponent(f.path)}" style="text-decoration:none;color:inherit">
+      <div class="t">${esc(f.meta.title || f.name)}<small class="mono">${esc(f.draft ? "下書き" : f.name.slice(0, 10))}</small></div>
+      ${f.meta.pinned ? `<span class="badge b-pick">おすすめ</span>` : ""}
+      <span class="badge ${f.draft ? "b-wip" : "b-done"}">${f.draft ? "下書き" : "公開中"}</span>
+    </a>`).join("");
+}
+$("newBtn").onclick = () => { location.hash = "new"; };
+
+/* ---------- editor ---------- */
+let editor = null, cur = null, cover = "", dirty = false, busy = false;
+const isDark = () => document.documentElement.dataset.theme === "dark" ||
+  (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+
+function makeEditor() {
+  const embed = document.createElement("button");
+  embed.type = "button"; embed.className = "toastui-editor-toolbar-icons embed-btn"; embed.textContent = "埋め込み";
+  embed.onclick = () => {
+    const url = prompt("埋め込みたい X（ツイート）か YouTube の URL を貼ってね");
+    if (!url) return;
+    editor.insertText("\n" + url.trim() + "\n");
+  };
+  editor = new toastui.Editor({
+    el: $("editor"), height: "auto", minHeight: "60vh", initialEditType: "wysiwyg", previewStyle: "tab",
+    language: "ja-JP", theme: isDark() ? "dark" : "default", usageStatistics: false, hideModeSwitch: false,
+    placeholder: "本文を書く…  画像はドラッグ＆ドロップ / 貼り付け / 画像ボタンで入れられます",
+    toolbarItems: [["heading", "bold", "italic", "strike"], ["hr", "quote"], ["ul", "ol"], ["image", "link", "table"],
+                   [{ name: "embed", tooltip: "X / YouTube を埋め込む", el: embed }], ["code", "codeblock"]],
+    hooks: {
+      addImageBlobHook: async (blob, cb) => {
+        try { cb(await uploadImage(blob), ""); } catch (e) { toast("画像のアップロードに失敗: " + e.message); }
+        return false;
+      },
+    },
+  });
+  editor.on("change", () => { dirty = true; setState(); });
+}
+
+async function openEditor(path) {
+  show("vEdit");
+  if (!editor) makeEditor();
+  cur = null; cover = ""; dirty = false;
+  const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  let meta = {}, body = "";
+  if (path) {
+    $("state").textContent = "読み込み中…";
+    const j = await gh(`/contents/${encPath(path)}`);
+    ({ meta, body } = parseFM(b64dec(j.content)));
+    const name = path.split("/").pop().replace(/\.md$/, "");
+    const m = name.match(/^(\d{4}-\d{2}-\d{2})-(.*)$/);
+    cur = { path, sha: j.sha, draft: path.startsWith("_drafts/"), date: m ? m[1] : today, slug: m ? m[2] : name };
+  }
+  $("fTitle").value = meta.title || "";
+  $("fTags").value = (meta.tags || []).join(", ");
+  $("fDate").value = cur ? cur.date : today;
+  $("fSlug").value = cur ? cur.slug : "";
+  $("fDesc").value = meta.description || "";
+  $("fPinned").setAttribute("aria-pressed", String(!!meta.pinned));
+  setCover(meta.cover ? toRaw("(" + meta.cover).slice(1) : "");
+  editor.setMarkdown(toRaw(body).trim(), false);
+  $("delBtn").hidden = !cur;
+  $("meta").open = !cur;
+  fitTitle(); dirty = false; setState();
+  if (!cur) $("fTitle").focus();
+}
+function setState() {
+  $("state").textContent = (cur ? (cur.draft ? "下書き" : "公開中") : "新規") + (dirty ? " ・ 未保存" : "");
+}
+function fitTitle() { const t = $("fTitle"); t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }
+$("fTitle").addEventListener("input", () => { fitTitle(); dirty = true; setState(); });
+["fTags", "fDate", "fSlug", "fDesc"].forEach(id => $(id).addEventListener("input", () => { dirty = true; setState(); }));
+$("fTitle").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); editor.focus(); } });
+$("fPinned").onclick = () => {
+  const b = $("fPinned"); b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); dirty = true; setState();
+};
+$("backBtn").onclick = () => { if (!dirty || confirm("保存していない変更があります。一覧に戻りますか？")) { dirty = false; location.hash = ""; } };
+addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+/* ---------- cover ---------- */
+function setCover(url) {
+  cover = url; $("coverPv").src = url || ""; $("coverPv").style.display = url ? "block" : "none"; $("coverDel").hidden = !url;
+}
+$("coverBtn").onclick = () => $("coverFile").click();
+$("coverDel").onclick = () => { setCover(""); dirty = true; setState(); };
+$("coverFile").onchange = async (e) => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { setCover(await uploadImage(f)); dirty = true; setState(); } catch (err) { toast("アップロード失敗: " + err.message); }
+};
+
+/* ---------- images ---------- */
+async function shrink(blob) {
+  if (!/^image\/(jpeg|png|webp|heic|heif)$/.test(blob.type)) return blob;
+  try {
+    const bmp = await createImageBitmap(blob);
+    const k = Math.min(1, 2400 / Math.max(bmp.width, bmp.height));
+    if (k === 1 && blob.size < 1.5e6 && blob.type !== "image/heic") return blob;
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
+    return await new Promise(r => c.toBlob(r, "image/jpeg", 0.86));
+  } catch (e) { return blob; }
+}
+async function uploadImage(file) {
+  toast("画像をアップロード中…");
+  const blob = await shrink(file);
+  const ext = ({ "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp" })[blob.type] || "jpg";
+  const d = new Date(), y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0");
+  const path = `images/${y}/${m}/${d.getTime()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+  if (DEMO) { toast("（デモ）画像を挿入"); return URL.createObjectURL(blob); }
+  await putFile(path, await blobB64(blob), `画像: ${path}`);
+  toast("画像を入れました");
+  return `${RAW}/${path}`;
+}
+// ページのどこにドロップしても本文に入るように
+let dragN = 0;
+addEventListener("dragenter", e => { if (!$("vEdit").hidden && [...(e.dataTransfer?.types || [])].includes("Files")) { dragN++; document.body.classList.add("dragging"); } });
+addEventListener("dragleave", () => { if (--dragN <= 0) { dragN = 0; document.body.classList.remove("dragging"); } });
+addEventListener("dragover", e => { if (!$("vEdit").hidden) e.preventDefault(); });
+addEventListener("drop", async e => {
+  dragN = 0; document.body.classList.remove("dragging");
+  if ($("vEdit").hidden || e.defaultPrevented) return;
+  if (e.target.closest && e.target.closest(".toastui-editor-defaultUI")) return; // エディタ自身が処理する
+  e.preventDefault();
+  for (const f of [...e.dataTransfer.files].filter(f => f.type.startsWith("image/"))) {
+    try { const url = await uploadImage(f); editor.exec("addImage", { imageUrl: url, altText: "" }); } catch (err) { toast("アップロード失敗: " + err.message); }
+  }
+});
+
+/* ---------- save / delete ---------- */
+async function save(asDraft) {
+  if (busy) return;
+  const title = $("fTitle").value.trim();
+  if (!title) { toast("タイトルを入れてね"); $("fTitle").focus(); return; }
+  const date = $("fDate").value || new Date().toISOString().slice(0, 10);
+  let slug = $("fSlug").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
+  if (!slug) slug = "post-" + Date.now().toString(36);
+  $("fSlug").value = slug;
+  const md = fromRaw(editor.getMarkdown()).trim();
+  const text = buildFM({
+    title, tags: $("fTags").value.split(/[,、，]/).map(s => s.trim()).filter(Boolean),
+    pinned: $("fPinned").getAttribute("aria-pressed") === "true",
+    cover: cover ? fromRaw(cover) : "", description: $("fDesc").value.trim(),
+  }) + "\n\n" + md + "\n";
+  const path = asDraft ? `_drafts/${slug}.md` : `_posts/${date}-${slug}.md`;
+
+  busy = true; ["pubBtn", "draftBtn"].forEach(id => $(id).disabled = true);
+  try {
+    let sha = cur && cur.path === path ? cur.sha : undefined;
+    if (!sha) {
+      const ex = await gh(`/contents/${encPath(path)}`, { allow404: true });
+      if (ex) { if (!confirm("同じURLの記事がもうあります。上書きしますか？")) return; sha = ex.sha; }
+    }
+    const res = await putFile(path, b64enc(text), `${asDraft ? "下書き" : "記事"}: ${title}`, sha);
+    if (cur && cur.path !== path) await delFile(cur.path, cur.sha, `移動: ${title}`);
+    cur = { path, sha: res.content.sha, draft: asDraft, date, slug };
+    dirty = false; setState(); $("delBtn").hidden = false;
+    history.replaceState(null, "", "#edit=" + encodeURIComponent(path));
+    if (asDraft) toast("下書きを保存しました");
+    else {
+      const url = `/blog/${date.replace(/-/g, "/")}/${slug}/`;
+      U.openModal({ title: "公開しました 🎉", name: title, sub: "1〜2分でサイトに反映されます", url, copy: location.origin + url });
+    }
+  } catch (e) {
+    toast("保存できませんでした: " + e.message);
+  } finally {
+    busy = false; ["pubBtn", "draftBtn"].forEach(id => $(id).disabled = false);
+  }
+}
+$("pubBtn").onclick = () => save(false);
+$("draftBtn").onclick = () => save(true);
+$("delBtn").onclick = async () => {
+  if (!cur || !confirm(`「${$("fTitle").value}」を削除します。元に戻せません。よろしいですか？`)) return;
+  try { await delFile(cur.path, cur.sha, `削除: ${$("fTitle").value}`); dirty = false; toast("削除しました"); location.hash = ""; }
+  catch (e) { toast("削除できませんでした: " + e.message); }
+};
+addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "s" && !$("vEdit").hidden) { e.preventDefault(); save(!!(cur && cur.draft)); }
+});
+
+/* ---------- demo (localhost only) ---------- */
+const demoFiles = {};
+function demoApi(path, opts) {
+  if (path === "") return { permissions: { push: true } };
+  const p = decodeURIComponent(path.replace("/contents/", ""));
+  if (opts.method === "PUT") { demoFiles[p] = { content: opts.body.content, sha: "s" + Date.now() }; return { content: { sha: demoFiles[p].sha } }; }
+  if (opts.method === "DELETE") { delete demoFiles[p]; return null; }
+  if (p === "_posts" || p === "_drafts") return Object.keys(demoFiles).filter(k => k.startsWith(p + "/")).map(k => ({ name: k.split("/").pop(), path: k }));
+  if (demoFiles[p]) return { content: demoFiles[p].content, sha: demoFiles[p].sha };
+  if (opts.allow404) return null;
+  throw new Error("404");
+}
+
+boot();
+})();
+</script>
+</body>
+</html>
