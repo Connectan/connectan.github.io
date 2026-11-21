@@ -143,3 +143,6 @@ body.editing .admin { padding-bottom: 200px; }
   .ebar .btn { padding: 9px 12px; }
   .ebar .state small { display: none; }
 }
+/* 戻す / 進む */
+.hist-btn { font-weight: 700 !important; }
+.hist-btn:disabled { opacity: .35; cursor: default; }

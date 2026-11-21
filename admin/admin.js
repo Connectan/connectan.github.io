@@ -366,11 +366,20 @@ function makeEditor() {
     b.onclick = () => { editor.exec("heading", { level }); editor.focus(); };
     return { name: "h" + level, tooltip: tip, el: b };
   };
+  // 間違えたときの「戻す」と、やっぱり合ってたときの「進む」
+  const histBtn = (label, redo, tip) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "toastui-editor-toolbar-icons hbtn hist-btn"; b.textContent = label; b.title = tip; b.disabled = true;
+    b.onclick = () => { histStep(redo); };
+    return { name: redo ? "redo" : "undo", tooltip: tip, el: b };
+  };
+  const undoItem = histBtn("↶ 戻す", false, "ひとつ前に戻す（Ctrl+Z）"), redoItem = histBtn("↷ 進む", true, "戻したのをやり直す（Ctrl+Shift+Z）");
+  undoBtn = undoItem.el; redoBtn = redoItem.el;
   editor = new toastui.Editor({
     el: $("editor"), height: "auto", minHeight: "60vh", initialEditType: "wysiwyg", previewStyle: "tab",
     language: "ja-JP", theme: isDark() ? "dark" : "default", usageStatistics: false, hideModeSwitch: false,
     placeholder: "本文を書く…  画像はドラッグ＆ドロップ / 貼り付け / 画像ボタンで入れられます",
-    toolbarItems: [[hBtn("大見出し", 2, "大見出し（目次に出ます）"), hBtn("小見出し", 3, "小見出し（目次に出ます）"), "heading"], ["bold", "italic", "strike"], ["hr", "quote"], ["ul", "ol"], ["image", "link", "table"],
+    toolbarItems: [[undoItem, redoItem], [hBtn("大見出し", 2, "大見出し（目次に出ます）"), hBtn("小見出し", 3, "小見出し（目次に出ます）"), "heading"], ["bold", "italic", "strike"], ["hr", "quote"], ["ul", "ol"], ["image", "link", "table"],
                    [{ name: "embed", tooltip: "X / YouTube を埋め込む", el: embed }], ["code", "codeblock"]],
     hooks: {
       // 貼り付け・画像ボタンから来た画像
@@ -381,10 +390,47 @@ function makeEditor() {
       },
     },
   });
-  editor.on("change", () => { dirty = true; setState(); backupSoon(); if (!$("tocPanel").hidden) renderToc(); });
+  editor.on("change", () => { dirty = true; setState(); backupSoon(); if (!$("tocPanel").hidden) renderToc(); updateHist(); });
+  // 書き方（Markdown / 見たまま）を切り替えたら、そこを戻せる限界にする
+  editor.on("changeMode", () => setTimeout(markHistoryBase, 0));
+  // 記事を開いた時点より前（空っぽや、前に開いていた記事）には Ctrl+Z でも戻らないようにする
+  $("editor").addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "z" && !canUndo()) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
   // 書式ツールバー（画像・太字など）を画面下の操作バーへ移す → スクロールしても常に手元にある
   const tb = document.querySelector("#editor .toastui-editor-toolbar");
   if (tb) { $("dockTools").appendChild(tb); dispatchEvent(new Event("resize")); }
+}
+
+/* ---- 戻す / 進む ---- */
+// Toast UI Editor が持っている編集履歴（Ctrl+Z と同じもの）をボタンから使う
+let undoBtn = null, redoBtn = null;
+const histBase = new WeakMap();   // 書き方ごとに「ここより前には戻らない」位置を覚えておく
+const pmView = () => { const m = editor && editor.getCurrentModeEditor(); return m && m.view; };
+function histCounts() {
+  const v = pmView(); if (!v) return null;
+  const p = v.state.plugins.find(p => p.key && p.key.startsWith("history$"));
+  const s = p && p.getState(v.state);
+  return s ? { v, done: s.done.eventCount, undone: s.undone.eventCount } : null;
+}
+function canUndo() { const h = histCounts(); return !!h && h.done > (histBase.get(h.v) || 0); }
+function canRedo() { const h = histCounts(); return !!h && h.undone > 0; }
+function updateHist() {
+  if (undoBtn) undoBtn.disabled = !canUndo();
+  if (redoBtn) redoBtn.disabled = !canRedo();
+}
+// 記事を読み込んだ直後などに呼ぶ。今の状態を「戻せる限界」にする
+function markHistoryBase() {
+  const h = histCounts(); if (h) histBase.set(h.v, h.done);
+  updateHist();
+}
+function histStep(redo) {
+  if (redo ? !canRedo() : !canUndo()) return;
+  const v = pmView();
+  const mac = /Mac|iP(hone|[oa]d)/.test(navigator.platform);
+  v.dom.dispatchEvent(new KeyboardEvent("keydown", { key: redo ? "Z" : "z", code: "KeyZ", keyCode: 90,
+    shiftKey: redo, metaKey: mac, ctrlKey: !mac, bubbles: true, cancelable: true }));
+  updateHist();
 }
 
 /* ---- 目次（見出しを自動で読み取る） ---- */
@@ -441,6 +487,7 @@ async function openEditor(path) {
   $("tocPanel").hidden = true;
   setCover(meta.cover ? rawUrl(meta.cover) : "");
   editor.setMarkdown(toRaw(body).trim(), false);
+  markHistoryBase();
   $("meta").open = !cur;
   fitTitle(); dirty = false; setState();
   checkBackup(meta, body);
@@ -503,6 +550,7 @@ function checkBackup(meta, body) {
     $("fPinned").setAttribute("aria-pressed", String(!!b.pinned));
     setCover(b.cover ? rawUrl(b.cover) : "");
     editor.setMarkdown(toRaw(b.md), false);
+    markHistoryBase();
     fitTitle(); dirty = true; setState(); $("restore").hidden = true; toast("書きかけを復元しました");
   };
   $("restoreNo").onclick = () => { clearBackup(); $("restore").hidden = true; };
