@@ -206,7 +206,7 @@ h2 small { font-size: 14px; color: var(--muted); font-weight: 500; margin-left: 
 .device.main { grid-column: 1 / -1; padding: 32px; min-height: 260px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 24px; }
 .device.main .name { font-size: clamp(30px, 6vw, 48px); line-height: 1.15; margin: 6px 0 14px; }
 .device.main .note { font-size: 15px; }
-.device.main .glow { position: absolute; width: 360px; height: 360px; right: -80px; top: -120px; border-radius: 50%; background: var(--brand); filter: blur(80px); opacity: .35; z-index: -1; animation: pulse 6s ease-in-out infinite; }
+.device.main .glow { position: absolute; width: 360px; height: 360px; right: -80px; top: -120px; border-radius: 50%; background: var(--accent); filter: blur(80px); transition: background .5s; opacity: .35; z-index: -1; animation: pulse 6s ease-in-out infinite; }
 @keyframes pulse { 50% { transform: scale(1.25); opacity: .5; } }
 .away-dots::after { content: "…"; animation: dots 1.6s steps(4) infinite; display: inline-block; width: 1em; overflow: hidden; vertical-align: bottom; }
 @keyframes dots { from { width: 0; } to { width: 1em; } }
