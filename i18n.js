@@ -205,6 +205,7 @@ const T = {
 /* ---------- data.js / projects.json の中身の訳（キーは日本語の原文そのまま） ---------- */
 const DATA = {
   en: {
+    "Spotify で再生中の曲に合わせて、同期歌詞を通知・Island／ステータスバー・ロック画面に流すアプリ。": "An app that shows synced lyrics for whatever's playing on Spotify in your notifications, the Island / status bar, and on the lock screen.",
     "すべての Xperia で撮った写真に、「Taken with Xperia」ロゴと撮影情報（機種・焦点距離・F値・SS・ISO・日時）の透かしを入れるアプリ。": "An app that watermarks photos taken on any Xperia with a “Taken with Xperia” logo and shooting info (model, focal length, aperture, shutter speed, ISO, date).",
     "技適なしスマホ": "import-phone", "中華スマホ": "Chinese-phone", "折りたたみ": "foldable", "香港版": "HK-model", "ガジェット": "gadget",
     "技適あり時代": "The Giteki era", "ここから技適なし沼": "Into the non-Giteki rabbit hole",
@@ -234,6 +235,7 @@ const DATA = {
     "Spotify 歌詞同期": "Spotify Lyrics Sync", "Spotify の再生に合わせて歌詞を同期表示する。製作中。": "Shows lyrics synced to Spotify playback. In progress.",
   },
   "zh-CN": {
+    "Spotify で再生中の曲に合わせて、同期歌詞を通知・Island／ステータスバー・ロック画面に流すアプリ。": "跟随 Spotify 正在播放的歌曲，把同步歌词显示在通知、岛／状态栏和锁屏上的应用。",
     "すべての Xperia で撮った写真に、「Taken with Xperia」ロゴと撮影情報（機種・焦点距離・F値・SS・ISO・日時）の透かしを入れるアプリ。": "为所有 Xperia 拍摄的照片加上“Taken with Xperia”标志和拍摄信息（机型・焦距・光圈・快门・ISO・日期）水印的应用。",
     "技適なしスマホ": "无技适手机", "中華スマホ": "国产手机", "折りたたみ": "折叠屏", "香港版": "港版", "ガジェット": "数码",
     "技適あり時代": "有技适时代", "ここから技適なし沼": "从这里开始掉进无技适大坑",
@@ -263,6 +265,7 @@ const DATA = {
     "Spotify 歌詞同期": "Spotify 歌词同步", "Spotify の再生に合わせて歌詞を同期表示する。製作中。": "配合 Spotify 播放同步显示歌词。制作中。",
   },
   "zh-TW": {
+    "Spotify で再生中の曲に合わせて、同期歌詞を通知・Island／ステータスバー・ロック画面に流すアプリ。": "跟著 Spotify 正在播放的歌曲，把同步歌詞顯示在通知、島／狀態列和鎖定畫面上的 App。",
     "すべての Xperia で撮った写真に、「Taken with Xperia」ロゴと撮影情報（機種・焦点距離・F値・SS・ISO・日時）の透かしを入れるアプリ。": "替所有 Xperia 拍攝的照片加上「Taken with Xperia」標誌和拍攝資訊（機型・焦距・光圈・快門・ISO・日期）浮水印的 App。",
     "技適なしスマホ": "無技適手機", "中華スマホ": "中國手機", "折りたたみ": "折疊機", "香港版": "港版", "ガジェット": "3C",
     "技適あり時代": "有技適時代", "ここから技適なし沼": "從這裡開始掉進無技適大坑",
@@ -292,6 +295,7 @@ const DATA = {
     "Spotify 歌詞同期": "Spotify 歌詞同步", "Spotify の再生に合わせて歌詞を同期表示する。製作中。": "配合 Spotify 播放同步顯示歌詞。製作中。",
   },
   ko: {
+    "Spotify で再生中の曲に合わせて、同期歌詞を通知・Island／ステータスバー・ロック画面に流すアプリ。": "Spotify에서 재생 중인 곡에 맞춰 동기화된 가사를 알림, 아일랜드/상태 표시줄, 잠금 화면에 띄워 주는 앱.",
     "すべての Xperia で撮った写真に、「Taken with Xperia」ロゴと撮影情報（機種・焦点距離・F値・SS・ISO・日時）の透かしを入れるアプリ。": "모든 Xperia로 찍은 사진에 \"Taken with Xperia\" 로고와 촬영 정보(기종·초점 거리·F값·셔터 속도·ISO·일시) 워터마크를 넣는 앱.",
     "技適なしスマホ": "해외 직구폰", "中華スマホ": "중국폰", "折りたたみ": "폴더블", "香港版": "홍콩판", "ガジェット": "가젯",
     "技適あり時代": "기테키 인증 시대", "ここから技適なし沼": "여기서부터 기테키 없는 늪",

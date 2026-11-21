@@ -1,5 +1,23 @@
 [
   {
+    "id": "lyricbridge",
+    "name": "LyricBridge",
+    "status": "done",
+    "public": true,
+    "date": "2026-11-21",
+    "repo": "https://github.com/Connectan/LyricBridge",
+    "page": "",
+    "desc": "Spotify で再生中の曲に合わせて、同期歌詞を通知・Island／ステータスバー・ロック画面に流すアプリ。",
+    "tags": [
+      "Android",
+      "Kotlin",
+      "Spotify"
+    ],
+    "version": "v1.0",
+    "download": "https://github.com/Connectan/LyricBridge/releases/latest",
+    "downloadLabel": "APK"
+  },
+  {
     "id": "xperia-all-watermark",
     "name": "Xperia All Watermark",
     "status": "done",
@@ -13,7 +31,7 @@
       "Kotlin",
       "Xperia"
     ],
-    "version": "v1.0",
+    "version": "v1.0.1",
     "download": "https://github.com/Connectan/Xperia-All-Watermark/releases/latest",
     "downloadLabel": "APK"
   },
@@ -31,7 +49,7 @@
       "Kotlin",
       "Xperia"
     ],
-    "version": "v1.0",
+    "version": "v1.0.1",
     "download": "https://github.com/Connectan/Xperia-Watermark-For-Zeiss/releases/latest",
     "downloadLabel": "APK"
   },
