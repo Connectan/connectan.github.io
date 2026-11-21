@@ -17,8 +17,8 @@
 <main class="wrap">
   <div class="page-head">
     <div class="eyebrow mono reveal">BLOG</div>
-    <h2 class="reveal" style="font-size:clamp(36px,7vw,56px)">ブログ</h2>
-    <p class="lead reveal">端末のこととか、作ったもののこととか。</p>
+    <h2 class="reveal" style="font-size:clamp(36px,7vw,56px)" data-i18n="blog.h">ブログ</h2>
+    <p class="lead reveal" data-i18n="blog.lead">端末のこととか、作ったもののこととか。</p>
   </div>
   <div class="tagbar reveal" id="tagbar"></div>
   <div class="featured" id="featured"></div>
@@ -27,14 +27,15 @@
 
 <footer class="foot wrap"><div class="inner glass"></div></footer>
 
+<script src="/i18n.js"></script>
 <script src="/data.js"></script>
 <script src="/common.js"></script>
 <script>
 (() => {
-const U = window.UI, { $, esc } = U;
+const U = window.UI, { $, esc } = U, T = U.T;
 U.loadPosts().then(posts => {
   if (!posts.length) {
-    $("list").innerHTML = `<div class="glass empty reveal" style="grid-column:1/-1">まだ記事はありません。そのうち書きます。</div>`;
+    $("list").innerHTML = `<div class="glass empty reveal" style="grid-column:1/-1">${T("blog.empty")}</div>`;
     U.reveal(); return;
   }
   const tags = [...new Set(posts.flatMap(p => p.tags || []))];
@@ -46,7 +47,7 @@ U.loadPosts().then(posts => {
     $("featured").innerHTML = picks.map((p, i) => U.postCard(p, { big: true, d: i })).join("");
     $("list").innerHTML = rest.map((p, i) => U.postCard(p, { d: i % 6 })).join("");
     $("tagbar").innerHTML = ["", ...tags].map(t =>
-      `<button class="glass" data-t="${esc(t)}" aria-pressed="${t === cur}">${t ? "#" + esc(t) : "すべて"}</button>`).join("");
+      `<button class="glass" data-t="${esc(t)}" aria-pressed="${t === cur}">${t ? "#" + esc(t) : T("blog.all")}</button>`).join("");
     U.reveal();
   }
   $("tagbar").addEventListener("click", e => {

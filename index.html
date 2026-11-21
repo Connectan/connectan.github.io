@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>こねくたん</title>
-<meta name="description" content="こねくたん（晓玲 清風）の自己紹介ページ。技適なし中華スマホ沼の住人。">
+<meta name="description" content="こねくたん（晓玲 清風）の自己紹介ページ。技適なし中華スマホ沼の住人。" data-i18n-content="meta.desc">
 <meta name="site-base" content="/">
 <link rel="alternate" type="application/atom+xml" title="こねくたん Blog" href="/feed.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,8 +19,8 @@
   <h1 class="name" id="heroName"></h1>
   <div class="reading mono"><span id="heroReading"></span><span class="aka" id="heroAka"></span></div>
   <div class="notice glass" id="notice" hidden></div>
-  <p class="tagline"><span class="rot" id="rot"></span>沼の住人。</p>
-  <p class="sub">中華スマホとガジェットいじり、たまにコードとブログを書いてます。</p>
+  <p class="tagline"><span data-i18n="hero.tagPre"></span><span class="rot" id="rot"></span><span data-i18n="hero.tagPost">沼の住人。</span></p>
+  <p class="sub" data-i18n="hero.sub">中華スマホとガジェットいじり、たまにコードとブログを書いてます。</p>
   <div class="hero-links" id="heroLinks"></div>
   <div class="scroll-hint" aria-hidden="true"></div>
 </header>
@@ -29,41 +29,41 @@
 
   <section id="about">
     <div class="eyebrow mono reveal">01 — ABOUT</div>
-    <h2 class="reveal">はじめまして</h2>
+    <h2 class="reveal" data-i18n="about.h">はじめまして</h2>
     <div class="glass about reveal tilt" style="--d:1">
-      <p>どうも、<b>こねくたん</b> です。SNS では <b>晓玲 清風</b> って名前でやってます。</p>
-      <p>
+      <p data-i18n="about.p1">どうも、<b>こねくたん</b> です。SNS では <b>晓玲 清風</b> って名前でやってます。</p>
+      <p data-i18n="about.p2">
         スマホはもともと好きで、最後にまともに使ってた技適ありは <b>Xiaomi 12T Pro</b> と <b>Libero Flip</b> の2台持ち。
         そこに現れたのが <b>vivo X70 Pro+</b>。初めて触った技適なし端末で、これが完全に運の尽き。
         そこから一気に中華スマホ沼に引きずり込まれました。
       </p>
-      <p>布陣は <b>ほんまに定期的に</b> 変わります。このページの「現在の布陣」も、気づいたら入れ替わってると思います。</p>
-      <p>作ったアプリはこのページと GitHub に、端末の話はブログに書いていきます。</p>
+      <p data-i18n="about.p3">布陣は <b>ほんまに定期的に</b> 変わります。このページの「現在の布陣」も、気づいたら入れ替わってると思います。</p>
+      <p data-i18n="about.p4">作ったアプリはこのページと GitHub に、端末の話はブログに書いていきます。</p>
     </div>
     <div class="stats" id="stats"></div>
-    <div class="stat-note reveal">※ 数字は技適なし端末だけでカウント（Xperia などの技適あり端末は除外）</div>
+    <div class="stat-note reveal" data-i18n="stats.note">※ 数字は技適なし端末だけでカウント（Xperia などの技適あり端末は除外）</div>
   </section>
 
   <section id="lineup">
     <div class="eyebrow mono reveal">02 — LINEUP</div>
-    <h2 class="reveal">現在の布陣<small id="lineupDate"></small></h2>
-    <p class="lead reveal">いま手元にいる（一部いない）端末たち。</p>
+    <h2 class="reveal"><span data-i18n="lineup.h">現在の布陣</span><small id="lineupDate"></small></h2>
+    <p class="lead reveal" data-i18n="lineup.lead">いま手元にいる（一部いない）端末たち。</p>
     <div class="lineup" id="lineupGrid"></div>
   </section>
 
   <section id="history">
     <div class="eyebrow mono reveal">03 — HISTORY</div>
-    <h2 class="reveal">端末遍歴</h2>
-    <p class="lead reveal">技適ありから、技適なし沼の底まで。</p>
+    <h2 class="reveal" data-i18n="history.h">端末遍歴</h2>
+    <p class="lead reveal" data-i18n="history.lead">技適ありから、技適なし沼の底まで。</p>
     <div class="glass first reveal tilt">
       <div class="num mono">#1</div>
       <div>
-        <b>すべての元凶：vivo X70 Pro+</b>
-        <div style="color:var(--muted);font-size:14px">初めての技適なし端末。そして今も現役。こいつのせいで今がある。</div>
+        <b data-i18n="history.firstTitle">すべての元凶：vivo X70 Pro+</b>
+        <div style="color:var(--muted);font-size:14px" data-i18n="history.firstSub">初めての技適なし端末。そして今も現役。こいつのせいで今がある。</div>
       </div>
     </div>
     <div class="glass brandcard reveal" id="brandcard">
-      <b>メーカー別（技適なし）</b>
+      <b data-i18n="brand.title">メーカー別（技適なし）</b>
       <div class="brandbar" id="brandbar"></div>
       <div class="legend" id="legend"></div>
     </div>
@@ -72,24 +72,24 @@
 
   <section id="blog">
     <div class="eyebrow mono reveal">04 — BLOG</div>
-    <h2 class="reveal">ブログ</h2>
-    <p class="lead reveal">端末のこととか、作ったもののこととか。</p>
+    <h2 class="reveal" data-i18n="blog.h">ブログ</h2>
+    <p class="lead reveal" data-i18n="blog.lead">端末のこととか、作ったもののこととか。</p>
     <div class="featured" id="blogFeatured"></div>
     <div class="posts" id="blogLatest"></div>
-    <div class="more reveal"><a class="pill glass" href="/blog/">すべての記事 →</a></div>
+    <div class="more reveal"><a class="pill glass" href="/blog/" data-i18n="blog.more">すべての記事 →</a></div>
   </section>
 
   <section id="projects">
     <div class="eyebrow mono reveal">05 — PROJECTS</div>
     <h2 class="reveal">Projects</h2>
-    <p class="lead reveal">作ったもの・作ってるもの。</p>
+    <p class="lead reveal" data-i18n="projects.lead">作ったもの・作ってるもの。</p>
     <div id="projectWrap"></div>
   </section>
 
   <section id="follow">
     <div class="eyebrow mono reveal">06 — FOLLOW</div>
     <h2 class="reveal">SNS</h2>
-    <p class="lead reveal">だいたいこのへんにいます。</p>
+    <p class="lead reveal" data-i18n="follow.lead">だいたいこのへんにいます。</p>
     <div class="follow" id="followGrid"></div>
   </section>
 
@@ -97,6 +97,7 @@
 
 <footer class="foot wrap"><div class="inner glass"></div></footer>
 
+<script src="/i18n.js"></script>
 <script src="/data.js"></script>
 <script src="/common.js"></script>
 <script src="/home.js"></script>

@@ -36,14 +36,14 @@
 
 <main class="wrap" style="max-width:820px">
   <div class="page-head">
-    <a class="pill glass" href="{{ '/blog/' | relative_url }}">← 記事一覧</a>
+    <a class="pill glass" href="{{ '/blog/' | relative_url }}" data-i18n="post.back">← 記事一覧</a>
   </div>
 
   <article class="glass article reveal">
     <div class="a-date mono">{{ page.date | date: "%Y/%m/%d" }}</div>
     <h1>{{ page.title }}</h1>
     <div class="badges">
-      {% if page.pinned %}<span class="badge b-pick">おすすめ</span>{% endif %}
+      {% if page.pinned %}<span class="badge b-pick" data-i18n="post.pick">おすすめ</span>{% endif %}
       {% for tag in page.tags %}<span class="badge">#{{ tag }}</span>{% endfor %}
     </div>
     {% if page.cover %}<img src="{{ page.cover | relative_url }}" alt="" style="width:100%;border-radius:16px;margin-top:20px">{% endif %}
@@ -53,18 +53,27 @@
   </article>
 
   <div class="pager">
-    {% if page.previous %}<a class="glass prev tilt" href="{{ page.previous.url | relative_url }}"><small>← 前の記事</small>{{ page.previous.title }}</a>{% endif %}
-    {% if page.next %}<a class="glass next tilt" href="{{ page.next.url | relative_url }}"><small>次の記事 →</small>{{ page.next.title }}</a>{% endif %}
+    {% if page.previous %}<a class="glass prev tilt" href="{{ page.previous.url | relative_url }}"><small data-i18n="post.prev">← 前の記事</small>{{ page.previous.title }}</a>{% endif %}
+    {% if page.next %}<a class="glass next tilt" href="{{ page.next.url | relative_url }}"><small data-i18n="post.next">次の記事 →</small>{{ page.next.title }}</a>{% endif %}
   </div>
 </main>
 
 <footer class="foot wrap" style="max-width:820px"><div class="inner glass"></div></footer>
 
+<script src="{{ '/i18n.js' | relative_url }}"></script>
 <script src="{{ '/data.js' | relative_url }}"></script>
 <script src="{{ '/common.js' | relative_url }}"></script>
 <script>
 (() => {
   const prose = document.querySelector(".prose");
+  // 日本語以外で見ているときは「この記事は日本語です」と Google 翻訳へのリンクを出す
+  const I = UI.I18N;
+  if (I && I.lang !== "ja") {
+    const note = document.createElement("div");
+    note.className = "ja-note";
+    note.innerHTML = `${UI.esc(I.t("post.jaNote"))}<a href="https://translate.google.com/translate?sl=ja&tl=${encodeURIComponent(I.lang)}&u=${encodeURIComponent(location.href)}" target="_blank" rel="noopener">${UI.esc(I.t("post.translate"))} →</a>`;
+    prose.parentNode.insertBefore(note, prose);
+  }
   // URL だけの段落を埋め込みに（X / YouTube）
   let needX = false;
   prose.querySelectorAll("p").forEach(p => {
@@ -87,7 +96,7 @@
   const hs = [...prose.querySelectorAll("h2, h3")];
   if (hs.length >= 2) {
     hs.forEach((h, i) => { h.id = "h-" + (i + 1); });
-    let html = "<b>目次</b><ol>", inSub = false;
+    let html = `<b>${UI.esc(UI.T("post.toc"))}</b><ol>`, inSub = false;
     hs.forEach((h, i) => {
       const a = `<a href="#${h.id}">${UI.esc(h.textContent)}</a>`;
       if (h.tagName === "H3") {
@@ -104,7 +113,7 @@
     hs[0].parentNode.insertBefore(toc, hs[0]);
     // 目次を通り過ぎたら、左下に「目次」ボタン（どこからでも目次に戻れる）
     const btn = document.createElement("a");
-    btn.href = "#"; btn.className = "toc-fab glass"; btn.textContent = "目次";
+    btn.href = "#"; btn.className = "toc-fab glass"; btn.textContent = UI.T("post.toc");
     btn.onclick = (e) => { e.preventDefault(); toc.scrollIntoView({ behavior: "smooth", block: "start" }); };
     document.body.appendChild(btn);
     U_toc_watch(btn, toc);

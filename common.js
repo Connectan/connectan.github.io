@@ -5,6 +5,9 @@ const root = document.documentElement;
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 const BASE = (document.querySelector('meta[name="site-base"]') || {}).content || "/";
+// 多言語（i18n.js）。読み込まれていなければ日本語のまま
+const I18N = window.I18N || { lang: "ja", LANGS: [], SHORT: {}, t: (k) => k, tx: (s) => s, spec: (s) => s, setLang() {} };
+const T = I18N.t;
 
 const ICON = {
   bilibili: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="2.5" y="6.5" width="19" height="14" rx="4"/><path d="M7.5 2.8l3 3.4M16.5 2.8l-3 3.4M8.5 12.2v2M15.5 12.2v2"/></svg>',
@@ -15,7 +18,7 @@ const ICON = {
 };
 
 /* ---------- chrome（壁紙・ナビ・ボール・設定パネル）を差し込む ---------- */
-const NAV = [["About", "#about"], ["布陣", "#lineup"], ["遍歴", "#history"], ["Blog", "#blog"], ["Projects", "#projects"], ["Follow", "#follow"]];
+const NAV = [["About", "#about"], [T("nav.lineup"), "#lineup"], [T("nav.history"), "#history"], ["Blog", "#blog"], ["Projects", "#projects"], ["Follow", "#follow"]];
 document.body.insertAdjacentHTML("afterbegin", `
 <div class="wall" aria-hidden="true"><div class="blob a"></div><div class="blob b"></div><div class="blob c"></div><div class="blob d"></div></div>
 <div class="grain" aria-hidden="true"></div>
@@ -23,35 +26,38 @@ document.body.insertAdjacentHTML("afterbegin", `
 <nav class="top" id="nav"><div class="holder"><div class="bar glass">
   <a class="brand" href="${BASE}">${esc(S.name)}</a>
   <div class="links">${NAV.map(([t, h]) => `<a href="${BASE}${h}" data-sec="${h.slice(1)}">${t}</a>`).join("")}</div>
-  <button class="nav-ctl" id="openCC" aria-label="表示設定を開く">
+  <button class="nav-ctl" id="openCC" aria-label="${T("cc.open")}">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
   </button>
+  ${I18N.LANGS.length ? `<button class="nav-ctl nav-lang" id="openLang" aria-label="Language" title="Language"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span>${I18N.SHORT[I18N.lang] || ""}</span></button>` : ""}
   <div class="progress"><i id="scrollProg"></i></div>
 </div></div></nav>`);
 document.body.insertAdjacentHTML("beforeend", `
-<button class="ball glass" id="ball" aria-label="表示設定"><span class="core"></span></button>
+<button class="ball glass" id="ball" aria-label="${T("cc.aria")}"><span class="core"></span></button>
 <div class="cc-scrim" id="scrim"></div>
-<div class="cc glass" id="cc" role="dialog" aria-label="表示設定">
-  <h3>コントロールセンター <button class="x" id="closeCC" aria-label="閉じる">✕</button></h3>
-  <div class="group"><div class="label">ガラス</div>
+<div class="cc glass" id="cc" role="dialog" aria-label="${T("cc.aria")}">
+  <h3>${T("cc.title")} <button class="x" id="closeCC" aria-label="${T("cc.close")}">✕</button></h3>
+  ${I18N.LANGS.length ? `<div class="group"><div class="label">${T("cc.lang")}</div>
+    <div class="seg lang-seg" id="langSeg">${I18N.LANGS.map(([c, n]) => `<button data-lang="${c}" lang="${c}" aria-pressed="${c === I18N.lang}">${n}</button>`).join("")}</div></div>` : ""}
+  <div class="group"><div class="label">${T("cc.glass")}</div>
     <div class="glass-tiles" data-pref="glass">
-      <button class="gt" data-v="frosted"><span class="pv"><i></i></span>すりガラス</button>
-      <button class="gt" data-v="clear"><span class="pv"><i></i></span>クリア</button>
-      <button class="gt" data-v="liquid"><span class="pv"><i></i></span>リキッド</button>
-      <button class="gt" data-v="solid"><span class="pv"><i></i></span>ソリッド</button>
+      <button class="gt" data-v="frosted"><span class="pv"><i></i></span>${T("cc.frosted")}</button>
+      <button class="gt" data-v="clear"><span class="pv"><i></i></span>${T("cc.clear")}</button>
+      <button class="gt" data-v="liquid"><span class="pv"><i></i></span>${T("cc.liquid")}</button>
+      <button class="gt" data-v="solid"><span class="pv"><i></i></span>${T("cc.solid")}</button>
     </div></div>
-  <div class="group"><div class="label">ぼかしの強さ</div><input type="range" id="blurK" min="0" max="2" step="0.05"></div>
-  <div class="group"><div class="label">壁紙</div>
+  <div class="group"><div class="label">${T("cc.blur")}</div><input type="range" id="blurK" min="0" max="2" step="0.05"></div>
+  <div class="group"><div class="label">${T("cc.wall")}</div>
     <div class="walls" data-pref="wall">
-      <button class="wb" data-v="aurora" aria-label="オーロラ" style="background:linear-gradient(135deg,#2fe0a8,#415fff,#b44fff)"></button>
-      <button class="wb" data-v="sunset" aria-label="サンセット" style="background:linear-gradient(135deg,#ffb23d,#ff6a3d,#ff3d7f)"></button>
-      <button class="wb" data-v="ocean" aria-label="オーシャン" style="background:linear-gradient(135deg,#6be3ff,#2d7dff,#3a3dd8)"></button>
-      <button class="wb" data-v="sakura" aria-label="サクラ" style="background:linear-gradient(135deg,#ffc6dc,#ff8fbf,#c79bff)"></button>
-      <button class="wb" data-v="mono" aria-label="モノクロ" style="background:linear-gradient(135deg,#d3d6db,#9aa0a9,#5b6068)"></button>
+      <button class="wb" data-v="aurora" aria-label="${T("cc.aurora")}" style="background:linear-gradient(135deg,#2fe0a8,#415fff,#b44fff)"></button>
+      <button class="wb" data-v="sunset" aria-label="${T("cc.sunset")}" style="background:linear-gradient(135deg,#ffb23d,#ff6a3d,#ff3d7f)"></button>
+      <button class="wb" data-v="ocean" aria-label="${T("cc.ocean")}" style="background:linear-gradient(135deg,#6be3ff,#2d7dff,#3a3dd8)"></button>
+      <button class="wb" data-v="sakura" aria-label="${T("cc.sakura")}" style="background:linear-gradient(135deg,#ffc6dc,#ff8fbf,#c79bff)"></button>
+      <button class="wb" data-v="mono" aria-label="${T("cc.mono")}" style="background:linear-gradient(135deg,#d3d6db,#9aa0a9,#5b6068)"></button>
     </div></div>
-  <div class="group"><div class="label">テーマ</div>
-    <div class="seg" data-pref="theme"><button data-v="auto">自動</button><button data-v="light">ライト</button><button data-v="dark">ダーク</button></div></div>
-  <div class="group switch"><span>アニメーション</span><button class="tog" id="animTog" aria-label="アニメーション"></button></div>
+  <div class="group"><div class="label">${T("cc.theme")}</div>
+    <div class="seg" data-pref="theme"><button data-v="auto">${T("cc.auto")}</button><button data-v="light">${T("cc.light")}</button><button data-v="dark">${T("cc.dark")}</button></div></div>
+  <div class="group switch"><span>${T("cc.anim")}</span><button class="tog" id="animTog" aria-label="${T("cc.anim")}"></button></div>
 </div>
 <div class="modal glass" id="modal" role="dialog"></div>
 <div class="toast glass" id="toast"></div>`);
@@ -87,18 +93,18 @@ function openModal({ icon, color, title, name, sub, qr, copy, url }) {
   $("modal").innerHTML = `
     ${icon ? `<div class="m-ic" style="background:${color}">${ICON[icon] || ""}</div>` : ""}
     <b style="font-size:17px">${esc(title)}</b>
-    ${qr ? `<img src="${esc(qr)}" alt="${esc(title)} QRコード">` : ""}
+    ${qr ? `<img src="${esc(qr)}" alt="${esc(T("m.qrAlt", { t: title }))}">` : ""}
     ${name ? `<div class="m-name">${esc(name)}</div>` : ""}
     ${sub ? `<div class="m-sub">${esc(sub)}</div>` : ""}
     <div class="m-btns">
-      ${url ? `<a class="pill glass" href="${esc(url)}" target="_blank" rel="noopener">開く</a>` : ""}
-      ${copy ? `<button class="pill glass" id="mCopy">コピー</button>` : ""}
-      <button class="pill glass" id="mClose">閉じる</button>
+      ${url ? `<a class="pill glass" href="${esc(url)}" target="_blank" rel="noopener">${T("m.open")}</a>` : ""}
+      ${copy ? `<button class="pill glass" id="mCopy">${T("m.copy")}</button>` : ""}
+      <button class="pill glass" id="mClose">${T("m.close")}</button>
     </div>`;
   document.body.classList.add("modal-open");
   $("mClose").onclick = closeAll;
   if (copy) $("mCopy").onclick = async () => {
-    try { await navigator.clipboard.writeText(copy); toast("コピーしました"); } catch (e) { toast("コピーできませんでした"); }
+    try { await navigator.clipboard.writeText(copy); toast(T("m.copied")); } catch (e) { toast(T("m.copyFail")); }
   };
 }
 function openCC() { document.body.classList.add("cc-open"); }
@@ -106,6 +112,11 @@ function closeAll() { document.body.classList.remove("cc-open", "modal-open"); }
 $("openCC").onclick = openCC;
 $("closeCC").onclick = closeAll;
 $("scrim").onclick = closeAll;
+if ($("openLang")) $("openLang").onclick = openCC;
+if ($("langSeg")) $("langSeg").addEventListener("click", e => {
+  const b = e.target.closest("[data-lang]");
+  if (b && b.dataset.lang !== I18N.lang) I18N.setLang(b.dataset.lang);
+});
 addEventListener("keydown", e => { if (e.key === "Escape") closeAll(); });
 
 /* ---------- reveal ---------- */
@@ -208,14 +219,14 @@ function postCard(p, { big = false, d = 0 } = {}) {
     ? `<span class="cover" style="--bg:url('${esc(p.cover).replace(/'/g, "%27")}')"><img src="${esc(p.cover)}" alt="" loading="lazy"></span>` : "";
   return `<a class="glass post-card tilt reveal ${big ? "big" : ""} ${cover ? "has-cover" : ""}" href="${esc(p.url)}" style="--d:${d}">
     <div style="display:flex;flex-direction:column;gap:8px">
-      <div class="p-tags">${p.pinned ? `<span class="badge b-pick">おすすめ</span>` : ""}<span class="p-date mono">${esc(p.date)}</span></div>
+      <div class="p-tags">${p.pinned ? `<span class="badge b-pick">${T("post.pick")}</span>` : ""}<span class="p-date mono">${esc(p.date)}</span></div>
       <h3 class="p-title">${esc(p.title)}</h3>
       ${p.excerpt ? `<p class="p-ex">${esc(p.excerpt)}</p>` : ""}
-      <div class="p-tags">${tags}<span class="arrow">読む →</span></div>
+      <div class="p-tags">${tags}<span class="arrow">${T("post.read")}</span></div>
     </div>${cover}
   </a>`;
 }
 
-window.UI = { $, esc, ICON, BASE, prefs, toast, openModal, reveal, onScroll: (f) => scrollHooks.push(f), loadPosts, postCard };
+window.UI = { $, esc, ICON, BASE, I18N, T, prefs, toast, openModal, reveal, onScroll: (f) => scrollHooks.push(f), loadPosts, postCard };
 requestAnimationFrame(() => { reveal(); onScroll(); });
 })();
