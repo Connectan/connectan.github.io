@@ -75,7 +75,24 @@ function apply() {
     b.setAttribute("aria-pressed", String(b.dataset.v === prefs[g.dataset.pref]))));
   $("blurK").value = prefs.blur;
   $("animTog").setAttribute("aria-pressed", String(prefs.anim === "on"));
+  repaintGlass();
 }
+// スマホのブラウザは、すりガラス（backdrop-filter）の後ろの色を古いまま覚えてしまうことがある
+// （特に光るアニメーション付きの MAIN カード）。設定を変えたら、色の切り替えが終わる頃に
+// ぼかしをほんの少しだけ揺らし、光の層も作り直して、描き直させる
+let repaintT;
+function repaintGlass() {
+  clearTimeout(repaintT);
+  repaintT = setTimeout(() => {
+    root.style.setProperty("--blur-k", prefs.blur + 0.001);
+    document.querySelectorAll(".device.main .glow").forEach(g => {
+      g.style.animation = "none"; void g.offsetWidth; g.style.animation = "";
+    });
+    requestAnimationFrame(() => requestAnimationFrame(() => root.style.setProperty("--blur-k", prefs.blur)));
+  }, 600);
+}
+// 「自動」テーマで端末側のダーク／ライトが切り替わったときも描き直す
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", repaintGlass);
 document.querySelectorAll("[data-pref]").forEach(g => g.addEventListener("click", e => {
   const b = e.target.closest("[data-v]"); if (!b) return;
   prefs[g.dataset.pref] = b.dataset.v; apply(); save();
