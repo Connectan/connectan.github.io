@@ -48,6 +48,7 @@ const T = {
     "post.back": "← 記事一覧", "post.prev": "← 前の記事", "post.next": "次の記事 →", "post.toc": "目次",
   },
   en: {
+    "「Xperia Watermark For Zeiss」を完成版にしました": "Xperia Watermark For Zeiss is now a final release",
     "nav.lineup": "Lineup", "nav.history": "History",
     "cc.open": "Open display settings", "cc.aria": "Display settings", "cc.title": "Control Center", "cc.close": "Close",
     "cc.lang": "Language", "cc.glass": "Glass", "cc.frosted": "Frosted", "cc.clear": "Clear", "cc.liquid": "Liquid", "cc.solid": "Solid",
@@ -86,6 +87,7 @@ const T = {
     "follow.lead": "You can usually find me around here.",
   },
   "zh-CN": {
+    "「Xperia Watermark For Zeiss」を完成版にしました": "「Xperia Watermark For Zeiss」已推出正式版",
     "nav.lineup": "阵容", "nav.history": "历程",
     "cc.open": "打开显示设置", "cc.aria": "显示设置", "cc.title": "控制中心", "cc.close": "关闭",
     "cc.lang": "语言 / Language", "cc.glass": "玻璃", "cc.frosted": "磨砂", "cc.clear": "透明", "cc.liquid": "液态", "cc.solid": "实色",
@@ -123,6 +125,7 @@ const T = {
     "follow.lead": "我基本都在这些地方。",
   },
   "zh-TW": {
+    "「Xperia Watermark For Zeiss」を完成版にしました": "「Xperia Watermark For Zeiss」已推出正式版",
     "nav.lineup": "陣容", "nav.history": "歷程",
     "cc.open": "開啟顯示設定", "cc.aria": "顯示設定", "cc.title": "控制中心", "cc.close": "關閉",
     "cc.lang": "語言 / Language", "cc.glass": "玻璃", "cc.frosted": "霧面", "cc.clear": "透明", "cc.liquid": "液態", "cc.solid": "實色",
@@ -160,6 +163,7 @@ const T = {
     "follow.lead": "我大概都在這些地方。",
   },
   ko: {
+    "「Xperia Watermark For Zeiss」を完成版にしました": "「Xperia Watermark For Zeiss」를 정식판으로 만들었습니다",
     "nav.lineup": "라인업", "nav.history": "연대기",
     "cc.open": "화면 설정 열기", "cc.aria": "화면 설정", "cc.title": "컨트롤 센터", "cc.close": "닫기",
     "cc.lang": "언어 / Language", "cc.glass": "유리", "cc.frosted": "젖빛", "cc.clear": "클리어", "cc.liquid": "리퀴드", "cc.solid": "솔리드",
