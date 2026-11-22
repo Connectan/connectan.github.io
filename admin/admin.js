@@ -329,13 +329,15 @@ async function fetchPosts() {
 }
 async function listPosts() {
   show("vList", "posts");
+  setSelecting(false);
   $("plist").innerHTML = `<div class="glass panel muted">読み込み中…</div>`;
   try {
     const full = await fetchPosts();
     if (!full.length) { $("plist").innerHTML = `<div class="glass panel muted">まだ記事がありません。「＋ 新しい記事」から書けます。</div>`; return; }
     $("plist").innerHTML = full.map(f => {
       const hidden = f.meta.published === false;
-      return `<a class="glass pitem tilt" href="#edit=${encodeURIComponent(f.path)}">
+      return `<a class="glass pitem tilt" href="#edit=${encodeURIComponent(f.path)}" data-path="${esc(f.path)}">
+        <span class="chk"></span>
         ${f.meta.cover ? `<img class="thumb" src="${esc(rawUrl(f.meta.cover))}" alt="" loading="lazy">` : `<span class="thumb"></span>`}
         <div class="t">${esc(f.meta.title || f.name)}<small class="mono">${esc(f.draft ? "下書き" : f.name.slice(0, 10))}</small></div>
         ${f.meta.pinned ? `<span class="badge b-pick">おすすめ${pickNo(f.meta.pinned) ? " " + pickNo(f.meta.pinned) : ""}</span>` : ""}
@@ -344,6 +346,47 @@ async function listPosts() {
     }).join("");
   } catch (e) { $("plist").innerHTML = `<div class="glass panel err">${esc(e.message)}</div>`; }
 }
+
+/* ---- 一覧から選んで削除（1回のコミットでまとめて消す） ---- */
+let selecting = false;
+const selected = new Set();
+function setSelecting(on) {
+  selecting = on; selected.clear();
+  $("plist").classList.toggle("selecting", on);
+  $("plist").querySelectorAll(".pitem.sel").forEach(el => el.classList.remove("sel"));
+  $("selBar").hidden = !on; $("selBtn").hidden = on; $("newBtn").hidden = on;
+  updateSel();
+}
+function updateSel() {
+  $("selInfo").textContent = selected.size ? `${selected.size} 件を選択中` : "削除する記事をタップして選んでください";
+  $("selDel").disabled = !selected.size;
+  $("selDel").textContent = selected.size ? `${selected.size} 件を削除する` : "削除する";
+}
+$("selBtn").onclick = () => setSelecting(true);
+$("selCancel").onclick = () => setSelecting(false);
+$("plist").addEventListener("click", e => {
+  if (!selecting) return;
+  const el = e.target.closest(".pitem[data-path]");
+  if (!el) return;
+  e.preventDefault();
+  const p = el.dataset.path;
+  if (selected.has(p)) selected.delete(p); else selected.add(p);
+  el.classList.toggle("sel", selected.has(p));
+  updateSel();
+});
+$("selDel").onclick = () => busyBtn($("selDel"), async () => {
+  const items = postIndex.filter(f => selected.has(f.path));
+  if (!items.length) return;
+  const names = items.map(f => "・" + (f.meta.title || f.name)).join("\n");
+  if (!confirm(`次の ${items.length} 件の記事を削除します。元に戻せません。よろしいですか？\n\n${names}`)) return;
+  try {
+    await commitFiles(items.map(f => ({ path: f.path, remove: true })),
+      items.length === 1 ? `削除: ${items[0].meta.title || items[0].name}` : `記事を ${items.length} 件削除`);
+    toast(`${items.length} 件削除しました`);
+    setSelecting(false);
+    listPosts();
+  } catch (e) { toast("削除できませんでした: " + e.message); }
+});
 
 /* ================= おすすめ記事（3つまとめて変更） ================= */
 // front matter の pinned → 番号（1〜3）。true だけのときは 0（番号なしのおすすめ）
@@ -377,7 +420,8 @@ async function commitFiles(files, message) {
   const ref = await gh(`/git/ref/heads/${BRANCH}`);
   const base = await gh(`/git/commits/${ref.object.sha}`);
   const tree = await gh(`/git/trees`, { method: "POST", body: { base_tree: base.tree.sha,
-    tree: files.map(f => ({ path: f.path, mode: "100644", type: "blob", content: f.content })) } });
+    tree: files.map(f => f.remove ? { path: f.path, mode: "100644", type: "blob", sha: null }
+                                  : { path: f.path, mode: "100644", type: "blob", content: f.content }) } });
   const c = await gh(`/git/commits`, { method: "POST", body: { message, tree: tree.sha, parents: [ref.object.sha] } });
   await gh(`/git/refs/heads/${BRANCH}`, { method: "PATCH", body: { sha: c.sha } });
 }

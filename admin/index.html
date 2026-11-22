@@ -67,7 +67,14 @@
       <h2>記事</h2>
       <span class="spacer"></span>
       <a class="btn glass" href="/blog/" target="_blank" rel="noopener">ブログを見る</a>
+      <button class="btn danger" id="selBtn">🗑 選んで削除</button>
       <button class="btn primary" id="newBtn">＋ 新しい記事</button>
+    </div>
+    <div class="glass panel selbar" id="selBar" hidden>
+      <span id="selInfo">削除する記事をタップして選んでください</span>
+      <span class="spacer"></span>
+      <button class="btn" id="selCancel">やめる</button>
+      <button class="btn primary danger-fill" id="selDel" disabled>削除する</button>
     </div>
     <div class="plist" id="plist"><div class="glass panel muted">読み込み中…</div></div>
   </div>
