@@ -201,14 +201,17 @@ U.onScroll(vh => {
 
 /* ---------- blog ---------- */
 U.loadPosts().then(posts => {
-  const picks = posts.filter(p => p.pinned).slice(0, 2);
-  const latest = posts.filter(p => !p.pinned).slice(0, 4);
-  if (!posts.length) {
-    $("blogFeatured").innerHTML = `<div class="glass empty reveal">${T("blog.empty")}</div>`;
-  } else {
-    $("blogFeatured").innerHTML = picks.map((p, i) => U.postCard(p, { big: true, d: i })).join("");
-    $("blogLatest").innerHTML = latest.map((p, i) => U.postCard(p, { d: i })).join("");
+  // おすすめ（最大3つ）はページのいちばん上に。1番は大きく出す
+  const picks = U.pickedPosts(posts).slice(0, 3);
+  const latest = posts.filter(p => !picks.includes(p)).slice(0, 4);
+  if (picks.length) {
+    $("picksGrid").innerHTML = picks.map((p, i) => U.postCard(p, { big: i === 0, d: i })).join("");
+    $("picks").hidden = false;
+    U.reveal($("picks"));
   }
+  $("blogLatest").innerHTML = posts.length
+    ? latest.map((p, i) => U.postCard(p, { d: i })).join("")
+    : `<div class="glass empty reveal">${T("blog.empty")}</div>`;
   U.reveal($("blog"));
 });
 

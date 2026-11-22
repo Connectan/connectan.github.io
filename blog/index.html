@@ -42,7 +42,7 @@ U.loadPosts().then(posts => {
   let cur = "";
   function render() {
     const hit = posts.filter(p => !cur || (p.tags || []).includes(cur));
-    const picks = cur ? [] : hit.filter(p => p.pinned);
+    const picks = cur ? [] : U.pickedPosts(hit).slice(0, 3);
     const rest = hit.filter(p => !picks.includes(p));
     $("featured").innerHTML = picks.map((p, i) => U.postCard(p, { big: true, d: i })).join("");
     $("list").innerHTML = rest.map((p, i) => U.postCard(p, { d: i % 6 })).join("");

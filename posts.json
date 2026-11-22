@@ -8,6 +8,7 @@ layout: null
     "date": {{ post.date | date: "%Y/%m/%d" | jsonify }},
     "tags": {{ post.tags | jsonify }},
     "pinned": {% if post.pinned %}true{% else %}false{% endif %},
+    "pick": {% if post.pinned == true %}9{% elsif post.pinned %}{{ post.pinned | plus: 0 }}{% else %}0{% endif %},
     "cover": {{ post.cover | jsonify }},
     "excerpt": {{ post.description | default: post.excerpt | strip_html | strip_newlines | truncate: 110 | jsonify }}
   }{% unless forloop.last %},{% endunless %}{% endfor %}

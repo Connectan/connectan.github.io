@@ -18,7 +18,7 @@
 .tabs .btn { padding: 8px 12px; }
 
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; font-size: 13px; color: var(--muted); }
-.field input[type=text], .field input[type=password], .field input[type=date], .field textarea {
+.field input[type=text], .field input[type=password], .field input[type=date], .field textarea, .field select {
   font: inherit; font-size: 15px; color: var(--text); padding: 10px 14px; border-radius: 12px; resize: vertical;
   border: 1px solid var(--line); background: rgba(var(--g-rgb), .6); outline: none; }
 .field input:focus, .field textarea:focus { border-color: var(--accent); }

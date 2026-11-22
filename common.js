@@ -213,6 +213,8 @@ function loadPosts() {
     .catch(() => []);
   return postsCache;
 }
+// おすすめ記事（番号 1〜3 の順。番号なしの「おすすめ」はその後ろに日付順）
+const pickedPosts = (posts) => posts.filter(p => p.pinned).sort((a, b) => (a.pick || 9) - (b.pick || 9));
 function postCard(p, { big = false, d = 0 } = {}) {
   const tags = (p.tags || []).map(t => `<span class="badge">#${esc(t)}</span>`).join("");
   const cover = big && p.cover
@@ -227,6 +229,6 @@ function postCard(p, { big = false, d = 0 } = {}) {
   </a>`;
 }
 
-window.UI = { $, esc, ICON, BASE, I18N, T, prefs, toast, openModal, reveal, onScroll: (f) => scrollHooks.push(f), loadPosts, postCard };
+window.UI = { $, esc, ICON, BASE, I18N, T, prefs, toast, openModal, reveal, onScroll: (f) => scrollHooks.push(f), loadPosts, postCard, pickedPosts };
 requestAnimationFrame(() => { reveal(); onScroll(); });
 })();

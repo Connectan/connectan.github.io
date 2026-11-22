@@ -129,7 +129,7 @@ async function tryUnlock(pin) {
 }
 
 /* ================= 画面 ================= */
-const VIEWS = ["vSetup", "vLogin", "vList", "vProjects", "vNews", "vSettings", "vEdit"];
+const VIEWS = ["vSetup", "vLogin", "vList", "vPicks", "vProjects", "vNews", "vSettings", "vEdit"];
 function show(v, tab) {
   VIEWS.forEach(id => $(id).hidden = id !== v);
   $("tabs").hidden = !tab;
@@ -225,6 +225,7 @@ function route() {
   if (h === "new") openEditor(null);
   else if (h.startsWith("edit=")) openEditor(h.slice(5));
   else if (h === "settings") show("vSettings", "settings");
+  else if (h === "picks") listPicks();
   else if (h === "projects") listProjects();
   else if (h === "news") listNews();
   else listPosts();
@@ -298,7 +299,7 @@ const MANAGED = ["title", "tags", "pinned", "cover", "description", "layout", "d
 function buildFM(m, extra = {}) {
   const L = ["---", `title: ${yq(m.title)}`];
   if (m.tags.length) L.push(`tags: [${m.tags.map(yq).join(", ")}]`);
-  if (m.pinned) L.push("pinned: true");
+  if (m.pinned) L.push("pinned: " + (typeof m.pinned === "number" ? m.pinned : "true"));   // 番号（1〜3）はおすすめの順番
   if (m.cover) L.push(`cover: ${yq(m.cover)}`);
   if (m.description) L.push(`description: ${yq(m.description)}`);
   if (m.hidden) L.push("published: false");   // 非公開（サイト・一覧・お知らせ・RSS に出ない）
@@ -337,14 +338,79 @@ async function listPosts() {
       return `<a class="glass pitem tilt" href="#edit=${encodeURIComponent(f.path)}">
         ${f.meta.cover ? `<img class="thumb" src="${esc(rawUrl(f.meta.cover))}" alt="" loading="lazy">` : `<span class="thumb"></span>`}
         <div class="t">${esc(f.meta.title || f.name)}<small class="mono">${esc(f.draft ? "下書き" : f.name.slice(0, 10))}</small></div>
-        ${f.meta.pinned ? `<span class="badge b-pick">おすすめ</span>` : ""}
+        ${f.meta.pinned ? `<span class="badge b-pick">おすすめ${pickNo(f.meta.pinned) ? " " + pickNo(f.meta.pinned) : ""}</span>` : ""}
         <span class="badge ${f.draft || hidden ? "b-wip" : "b-done"}">${f.draft ? "下書き" : hidden ? "非公開" : "公開中"}</span>
       </a>`;
     }).join("");
   } catch (e) { $("plist").innerHTML = `<div class="glass panel err">${esc(e.message)}</div>`; }
 }
 
+/* ================= おすすめ記事（3つまとめて変更） ================= */
+// front matter の pinned → 番号（1〜3）。true だけのときは 0（番号なしのおすすめ）
+const pickNo = (v) => /^[1-9]$/.test(String(v)) ? +v : 0;
+let pickCands = [];
+async function listPicks() {
+  show("vPicks", "picks");
+  $("picksErr").className = "err"; $("picksErr").textContent = "読み込み中…";
+  ["pick1", "pick2", "pick3"].forEach(id => $(id).innerHTML = "");
+  try {
+    const all = await fetchPosts();
+    pickCands = all.filter(f => !f.draft && f.meta.published !== false);
+    // 今のおすすめ：番号順 → 番号なしは新しい順
+    const now = pickCands.filter(f => f.meta.pinned).sort((a, b) => ((pickNo(a.meta.pinned) || 9) - (pickNo(b.meta.pinned) || 9)) || b.name.localeCompare(a.name));
+    const opts = `<option value="">（なし）</option>` + pickCands.map(f =>
+      `<option value="${esc(f.path)}">${esc(f.name.slice(0, 10))}　${esc(f.meta.title || f.name)}</option>`).join("");
+    ["pick1", "pick2", "pick3"].forEach((id, i) => { $(id).innerHTML = opts; $(id).value = now[i] ? now[i].path : ""; });
+    $("picksErr").textContent = now.length > 3 ? `今おすすめになっている記事が ${now.length} 個あります。保存すると、ここで選んだ3つだけになります。` : "";
+  } catch (e) { $("picksErr").textContent = e.message; }
+}
+// front matter の pinned 行だけを書き換える（ほかの行や本文はそのまま）
+function setPinnedLine(text, no) {
+  const m = text.match(/^(---\r?\n)([\s\S]*?)(\r?\n---)/);
+  if (!m) return null;
+  let lines = m[2].split(/\r?\n/).filter(l => !/^pinned:/.test(l));
+  if (no) { const i = lines.findIndex(l => /^title:/.test(l)); lines.splice(i + 1, 0, "pinned: " + no); }
+  return m[1] + lines.join("\n") + m[3] + text.slice(m[0].length);
+}
+// 複数のファイルを1回のコミットでまとめて保存
+async function commitFiles(files, message) {
+  const ref = await gh(`/git/ref/heads/${BRANCH}`);
+  const base = await gh(`/git/commits/${ref.object.sha}`);
+  const tree = await gh(`/git/trees`, { method: "POST", body: { base_tree: base.tree.sha,
+    tree: files.map(f => ({ path: f.path, mode: "100644", type: "blob", content: f.content })) } });
+  const c = await gh(`/git/commits`, { method: "POST", body: { message, tree: tree.sha, parents: [ref.object.sha] } });
+  await gh(`/git/refs/heads/${BRANCH}`, { method: "PATCH", body: { sha: c.sha } });
+}
+$("picksClear").onclick = () => { ["pick1", "pick2", "pick3"].forEach(id => $(id).value = ""); $("picksErr").textContent = ""; };
+$("picksSave").onclick = () => busyBtn($("picksSave"), async () => {
+  const err = $("picksErr"); err.className = "err"; err.textContent = "";
+  const chosen = ["pick1", "pick2", "pick3"].map(id => $(id).value);
+  const picked = chosen.filter(Boolean);
+  if (new Set(picked).size !== picked.length) { err.textContent = "同じ記事が2回選ばれています"; return; }
+  const want = new Map(); chosen.forEach((p, i) => { if (p) want.set(p, i + 1); });
+  $("picksSave").textContent = "保存中…";
+  try {
+    const files = [];
+    for (const f of pickCands) {
+      const j = await getFile(f.path);   // 最新の中身を取り直す
+      const text = b64dec(j.content);
+      const { meta } = parseFM(text);
+      const before = meta.pinned ? (pickNo(meta.pinned) || "true") : 0, after = want.get(f.path) || 0;
+      if (String(before) === String(after)) continue;
+      const next = setPinnedLine(text, after);
+      if (next == null) throw new Error(`${f.name} の書式が読めませんでした`);
+      files.push({ path: f.path, content: next });
+    }
+    if (!files.length) { err.className = "err ok"; err.textContent = "変更はありません"; return; }
+    const names = chosen.map((p, i) => p ? `${i + 1}. ${(pickCands.find(f => f.path === p).meta.title || p)}` : "").filter(Boolean);
+    await commitFiles(files, "おすすめ記事を変更\n\n" + (names.join("\n") || "（なし）"));
+    err.className = "err ok"; err.textContent = "保存しました。1〜2分でサイトに反映されます。";
+    toast("おすすめ記事を保存しました");
+  } catch (e) { err.textContent = "保存できませんでした: " + e.message; }
+});
+
 /* ================= エディタ ================= */
+let curPick = 0;   // 開いている記事のおすすめ番号（編集画面で保存しても消さない）
 let editor = null, cur = null, cover = "", dirty = false, busy = false, extraMeta = {}, pendingProject = null, lastSaved = null;
 const isDark = () => document.documentElement.dataset.theme === "dark" ||
   (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
@@ -461,7 +527,7 @@ addEventListener("pointerdown", (e) => { if (!e.target.closest("#tocPanel,#tocBt
 async function openEditor(path) {
   show("vEdit");
   if (!editor) makeEditor();
-  cur = null; cover = ""; dirty = false; extraMeta = {}; lastSaved = null;
+  cur = null; cover = ""; dirty = false; extraMeta = {}; lastSaved = null; curPick = 0;
   let meta = {}, body = "";
   if (path) {
     if (!/^_(posts|drafts)\/[^/]+\.md$/.test(path)) { location.hash = ""; return; }
@@ -473,6 +539,7 @@ async function openEditor(path) {
       const m = name.match(/^(\d{4}-\d{2}-\d{2})-(.*)$/);
       cur = { path, sha: j.sha, draft: path.startsWith("_drafts/"), date: m ? m[1] : today(), slug: m ? m[2] : name, hidden: meta.published === false };
       extraMeta = meta;
+      curPick = pickNo(meta.pinned);
     } catch (e) { toast(e.message); location.hash = ""; return; }
   } else if (pendingProject) {
     ({ meta, body } = projectTemplate(pendingProject));
@@ -773,7 +840,7 @@ async function save(asDraft) {
   const md = fromRaw(editor.getMarkdown()).trim();
   const text = buildFM({
     title, tags: $("fTags").value.split(/[,、，]/).map(s => s.trim()).filter(Boolean),
-    pinned: $("fPinned").getAttribute("aria-pressed") === "true",
+    pinned: $("fPinned").getAttribute("aria-pressed") === "true" ? (curPick || true) : false,
     cover: cover ? fromRaw(cover) : "", description: $("fDesc").value.trim(), hidden: !isPublic(),
   }, extraMeta) + "\n\n" + md + "\n";
   const path = asDraft ? `_drafts/${slug}.md` : `_posts/${date}-${slug}.md`;

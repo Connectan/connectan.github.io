@@ -29,6 +29,7 @@ if (!lang) lang = "en";
 /* ---------- 画面の文言 ---------- */
 const T = {
   ja: {
+    "picks.h": "おすすめ記事",
     "nav.lineup": "布陣", "nav.history": "遍歴",
     "cc.open": "表示設定を開く", "cc.aria": "表示設定", "cc.title": "コントロールセンター", "cc.close": "閉じる",
     "cc.lang": "言語 / Language", "cc.glass": "ガラス", "cc.frosted": "すりガラス", "cc.clear": "クリア", "cc.liquid": "リキッド", "cc.solid": "ソリッド",
@@ -48,6 +49,7 @@ const T = {
     "post.back": "← 記事一覧", "post.prev": "← 前の記事", "post.next": "次の記事 →", "post.toc": "目次",
   },
   en: {
+    "picks.h": "Recommended posts",
     "「Xperia Watermark For Zeiss」を完成版にしました": "Xperia Watermark For Zeiss is now a final release",
     "nav.lineup": "Lineup", "nav.history": "History",
     "cc.open": "Open display settings", "cc.aria": "Display settings", "cc.title": "Control Center", "cc.close": "Close",
@@ -87,6 +89,7 @@ const T = {
     "follow.lead": "You can usually find me around here.",
   },
   "zh-CN": {
+    "picks.h": "推荐文章",
     "「Xperia Watermark For Zeiss」を完成版にしました": "「Xperia Watermark For Zeiss」已推出正式版",
     "nav.lineup": "阵容", "nav.history": "历程",
     "cc.open": "打开显示设置", "cc.aria": "显示设置", "cc.title": "控制中心", "cc.close": "关闭",
@@ -125,6 +128,7 @@ const T = {
     "follow.lead": "我基本都在这些地方。",
   },
   "zh-TW": {
+    "picks.h": "推薦文章",
     "「Xperia Watermark For Zeiss」を完成版にしました": "「Xperia Watermark For Zeiss」已推出正式版",
     "nav.lineup": "陣容", "nav.history": "歷程",
     "cc.open": "開啟顯示設定", "cc.aria": "顯示設定", "cc.title": "控制中心", "cc.close": "關閉",
@@ -163,6 +167,7 @@ const T = {
     "follow.lead": "我大概都在這些地方。",
   },
   ko: {
+    "picks.h": "추천 글",
     "「Xperia Watermark For Zeiss」を完成版にしました": "「Xperia Watermark For Zeiss」를 정식판으로 만들었습니다",
     "nav.lineup": "라인업", "nav.history": "연대기",
     "cc.open": "화면 설정 열기", "cc.aria": "화면 설정", "cc.title": "컨트롤 센터", "cc.close": "닫기",

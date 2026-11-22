@@ -435,3 +435,9 @@ body.modal-open .modal { transform: none; opacity: 1; pointer-events: auto; }
   background: color-mix(in srgb, var(--brand) 14%, transparent); border: 1px solid color-mix(in srgb, var(--brand) 35%, transparent); }
 #modal.spec .sp-point span { display: block; font-size: 11px; letter-spacing: .15em; color: var(--brand); margin-bottom: 2px; }
 #modal.spec .m-btns { justify-content: flex-end; }
+
+/* おすすめ記事（トップのいちばん上） */
+.picks-sec { padding-top: 40px; }
+.picks { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.picks > .post-card.big { grid-column: 1 / -1; }
+@media (max-width: 720px) { .picks { grid-template-columns: 1fr; } }

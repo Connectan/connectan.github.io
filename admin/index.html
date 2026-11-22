@@ -21,6 +21,7 @@
   <!-- タブ -->
   <div class="tabs glass" id="tabs" hidden>
     <a href="#" data-tab="posts">📝 記事</a>
+    <a href="#picks" data-tab="picks">⭐ おすすめ</a>
     <a href="#projects" data-tab="projects">🧩 プロジェクト</a>
     <a href="#news" data-tab="news">🔔 お知らせ</a>
     <a href="#settings" data-tab="settings">⚙ 設定</a>
@@ -69,6 +70,28 @@
       <button class="btn primary" id="newBtn">＋ 新しい記事</button>
     </div>
     <div class="plist" id="plist"><div class="glass panel muted">読み込み中…</div></div>
+  </div>
+
+  <!-- おすすめ記事 -->
+  <div id="vPicks" hidden>
+    <div class="row head">
+      <h2>おすすめ記事</h2>
+      <span class="spacer"></span>
+      <a class="btn glass" href="/" target="_blank" rel="noopener">トップを見る</a>
+    </div>
+    <p class="muted">トップページのいちばん上と、ブログ一覧のいちばん上に出る記事です。3つまで選べて、1番がいちばん大きく出ます。「保存」を押すと3つまとめて切り替わります（1〜2分でサイトに反映）。</p>
+    <div class="glass panel">
+      <div class="field">1番（大きく出る）<select id="pick1"></select></div>
+      <div class="field">2番<select id="pick2"></select></div>
+      <div class="field">3番<select id="pick3"></select></div>
+      <div class="err" id="picksErr"></div>
+      <div class="row">
+        <button class="btn" id="picksClear" type="button">全部外す</button>
+        <span class="spacer"></span>
+        <button class="btn primary" id="picksSave" type="button">保存</button>
+      </div>
+    </div>
+    <p class="muted" style="font-size:13px">※ 公開中の記事だけ選べます。下書き・非公開の記事は出ません。</p>
   </div>
 
   <!-- プロジェクト -->
