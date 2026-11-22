@@ -1,7 +1,6 @@
 ---
 title: "サイト作りました"
 tags: ["お知らせ"]
-pinned: true
 ---
 
 どうも、こねくたんです。GitHub Pages で自分のサイトを作りました。

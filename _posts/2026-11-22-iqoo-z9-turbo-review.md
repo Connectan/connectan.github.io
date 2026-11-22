@@ -1,5 +1,6 @@
 ---
 title: "iQOO Z9 Turbo+レビュー：常識を打ち破る「コスパ破壊機」の真髄"
+pinned: 2
 tags: ["iQOO", "技適なし", "vivo", "ゲーミングスマホ"]
 cover: "/images/2026/11/1795314316786-mbgho7.jpg"
 description: "iQOO Z9 Turbo+ = コスパ破壊 ?"

@@ -1,7 +1,7 @@
 ---
 title: "異形かつ魔境の傑作「Honor X50 Pro」実機をレビューしてみた。"
+pinned: 1
 tags: ["Honor", "レビュー", "技適なし"]
-pinned: true
 cover: "/images/2026/11/1795166607864-tgec.jpg"
 description: "日本はおろか中国ですらほぼ見かけない激レアスマホ、Honor X50 Pro。5800mAh×厚さ約7.98mmという物理的バグ機を実機レビュー。"
 ---
