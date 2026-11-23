@@ -72,15 +72,5 @@
     "repo": "",
     "page": "",
     "desc": "画面だけを消して、裏の動作はそのまま続けられるアプリ。"
-  },
-  {
-    "id": "spotify-lyrics-sync",
-    "name": "Spotify 歌詞同期",
-    "status": "wip",
-    "public": false,
-    "date": "",
-    "repo": "",
-    "page": "",
-    "desc": "Spotify の再生に合わせて歌詞を同期表示する。製作中。"
   }
 ]
