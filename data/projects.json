@@ -54,16 +54,6 @@
     "downloadLabel": "APK"
   },
   {
-    "id": "xperia-watermark-standard",
-    "name": "Xperia Watermark Standard",
-    "status": "done",
-    "public": false,
-    "date": "",
-    "repo": "",
-    "page": "",
-    "desc": "Xperia 向けウォーターマークのスタンダード版。"
-  },
-  {
     "id": "screen-off",
     "name": "画面のみオフ",
     "status": "done",
