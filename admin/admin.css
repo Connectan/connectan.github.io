@@ -116,6 +116,10 @@ body.editing .admin { padding-bottom: 200px; }
 .dlg-box .opt { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 14px; border: 1px solid var(--line); margin: 8px 0; cursor: pointer; }
 .dlg-box .opt input { width: 20px; height: 20px; accent-color: var(--accent); margin-top: 2px; flex: none; }
 .dlg-box .opt small { display: block; color: var(--muted); }
+.dlg-box button.opt { width: 100%; text-align: left; background: none; font: inherit; color: inherit; }
+.dlg-box button.opt:hover { border-color: var(--accent); }
+.dlg-box .opt.now { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.dlg-box .opt > span { font-size: 20px; line-height: 1.2; }
 
 .dropmask { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(0,0,0,.35);
   color: #fff; font-size: 22px; font-weight: 900; pointer-events: none; }
