@@ -29,6 +29,8 @@
   .embed { margin: 1.4em auto; display: flex; justify-content: center; }
   .embed.yt { position: relative; aspect-ratio: 16 / 9; width: 100%; }
   .embed.yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 14px; }
+  .embed.sp { width: 100%; }
+  .embed.sp iframe { width: 100%; border: 0; border-radius: 12px; }
   .prose img + em, .prose p > img:only-child + br + em { display: block; text-align: center; font-size: 13px; color: var(--muted); font-style: normal; }
 </style>
 </head>
@@ -74,12 +76,13 @@
     note.innerHTML = `${UI.esc(I.t("post.jaNote"))}<a href="https://translate.google.com/translate?sl=ja&tl=${encodeURIComponent(I.lang)}&u=${encodeURIComponent(location.href)}" target="_blank" rel="noopener">${UI.esc(I.t("post.translate"))} →</a>`;
     prose.parentNode.insertBefore(note, prose);
   }
-  // 記事に URL だけを書いた行を、プレビュー（埋め込み）に変える：X（ツイート）/ YouTube / BiliBili
+  // 記事に URL だけを書いた行を、プレビュー（埋め込み）に変える：X（ツイート）/ YouTube / BiliBili / Spotify
   // 前後に文章がくっついていても（空行なしで改行しただけでも）、URL だけの行なら埋め込みになる
   let needX = false;
   const RE_X = /^https?:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/(?:i\/web|i|\w+)\/status(?:es)?\/(\d+)/;
   const RE_YT = /^https?:\/\/(?:www\.|m\.|music\.)?(?:youtube\.com\/(?:watch\?(?:\S*&)?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([\w-]{11})/;
   const RE_BILI = /^https?:\/\/(?:www\.|m\.)?bilibili\.com\/video\/(BV[0-9A-Za-z]{10}|av\d+)/i;
+  const RE_SPOTIFY = /^https?:\/\/open\.spotify\.com\/(?:intl-[\w-]+\/)?(track|album|playlist|episode|show|artist)\/([0-9A-Za-z]{22})/;
   function embedFor(url) {
     let m;
     if ((m = url.match(RE_X))) {
@@ -97,6 +100,11 @@
       // sandbox：BiliBili のプレーヤーが記事ページごと移動してしまうのを防ぐ
       return `<div class="embed yt"><iframe src="https://player.bilibili.com/player.html?${q}&p=${page}&autoplay=0&high_quality=1&danmaku=0" title="BiliBili" loading="lazy" allowfullscreen
         sandbox="allow-scripts allow-same-origin allow-popups allow-presentation" allow="fullscreen; picture-in-picture"></iframe></div>`;
+    }
+    if ((m = url.match(RE_SPOTIFY))) {
+      const small = m[1] === "track" || m[1] === "episode";
+      return `<div class="embed sp"><iframe src="https://open.spotify.com/embed/${m[1]}/${m[2]}" title="Spotify" height="${small ? 152 : 352}" loading="lazy"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe></div>`;
     }
     return "";
   }
