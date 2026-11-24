@@ -463,9 +463,9 @@ function makeEditor() {
   const embed = document.createElement("button");
   embed.type = "button"; embed.className = "toastui-editor-toolbar-icons embed-btn"; embed.textContent = "埋め込み";
   embed.onclick = () => {
-    const url = (prompt("埋め込みたい X（ツイート）・YouTube・BiliBili の URL を貼ってね\n※ 本文に URL だけの行を書いても、記事ページで自動的に埋め込みになります") || "").trim();
+    const url = (prompt("埋め込みたい X（ツイート）・YouTube・BiliBili・Spotify の URL を貼ってね\n※ 本文に URL だけの行を書いても、記事ページで自動的に埋め込みになります") || "").trim();
     if (!url) return;
-    if (!/^https:\/\/(www\.|m\.|mobile\.|music\.)?(x\.com|twitter\.com|youtube\.com|youtu\.be|bilibili\.com)\//.test(url)) { toast("X・YouTube・BiliBili の URL だけ埋め込めます"); return; }
+    if (!/^https:\/\/(www\.|m\.|mobile\.|music\.)?(x\.com|twitter\.com|youtube\.com|youtu\.be|bilibili\.com|open\.spotify\.com)\//.test(url)) { toast("X・YouTube・BiliBili・Spotify の URL だけ埋め込めます"); return; }
     if (editor.isWysiwygMode()) editor.exec("addLink", { linkUrl: url, linkText: url });
     else editor.insertText("\n\n" + url + "\n\n");
   };
@@ -490,7 +490,7 @@ function makeEditor() {
     language: "ja-JP", theme: isDark() ? "dark" : "default", usageStatistics: false, hideModeSwitch: false,
     placeholder: "本文を書く…  画像はドラッグ＆ドロップ / 貼り付け / 画像ボタンで入れられます",
     toolbarItems: [[undoItem, redoItem], [hBtn("大見出し", 2, "大見出し（目次に出ます）"), hBtn("小見出し", 3, "小見出し（目次に出ます）"), "heading"], ["bold", "italic", "strike"], ["hr", "quote"], ["ul", "ol"], ["image", "link", "table"],
-                   [{ name: "embed", tooltip: "X / YouTube / BiliBili を埋め込む", el: embed }], ["code", "codeblock"]],
+                   [{ name: "embed", tooltip: "X / YouTube / BiliBili / Spotify を埋め込む", el: embed }], ["code", "codeblock"]],
     hooks: {
       // 貼り付け・画像ボタンから来た画像
       addImageBlobHook: (blob, cb) => {
