@@ -74,23 +74,66 @@
     note.innerHTML = `${UI.esc(I.t("post.jaNote"))}<a href="https://translate.google.com/translate?sl=ja&tl=${encodeURIComponent(I.lang)}&u=${encodeURIComponent(location.href)}" target="_blank" rel="noopener">${UI.esc(I.t("post.translate"))} →</a>`;
     prose.parentNode.insertBefore(note, prose);
   }
-  // URL だけの段落を埋め込みに（X / YouTube）
+  // 記事に URL だけを書いた行を、プレビュー（埋め込み）に変える：X（ツイート）/ YouTube / BiliBili
+  // 前後に文章がくっついていても（空行なしで改行しただけでも）、URL だけの行なら埋め込みになる
   let needX = false;
-  prose.querySelectorAll("p").forEach(p => {
-    if (p.querySelector("img")) return;
-    const links = p.querySelectorAll("a");
-    const onlyLink = links.length === 1 && p.textContent.trim() === links[0].textContent.trim();
-    const t = onlyLink ? links[0].href : p.textContent.trim().replace(/^<|>$/g, "");
+  const RE_X = /^https?:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/(?:i\/web|i|\w+)\/status(?:es)?\/(\d+)/;
+  const RE_YT = /^https?:\/\/(?:www\.|m\.|music\.)?(?:youtube\.com\/(?:watch\?(?:\S*&)?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([\w-]{11})/;
+  const RE_BILI = /^https?:\/\/(?:www\.|m\.)?bilibili\.com\/video\/(BV[0-9A-Za-z]{10}|av\d+)/i;
+  function embedFor(url) {
     let m;
-    if ((m = t.match(/^https?:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/\w+\/status\/(\d+)\S*$/))) {
-      const dark = getComputedStyle(document.documentElement).colorScheme === "dark";
-      p.outerHTML = `<div class="embed"><blockquote class="twitter-tweet" data-dnt="true" data-theme="${dark ? "dark" : "light"}"><a href="https://twitter.com/i/status/${m[1]}">${t}</a></blockquote></div>`;
+    if ((m = url.match(RE_X))) {
       needX = true;
-    } else if ((m = t.match(/^https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/)|youtu\.be\/)([\w-]{11})\S*$/))) {
-      p.outerHTML = `<div class="embed yt"><iframe src="https://www.youtube-nocookie.com/embed/${m[1]}" loading="lazy" allowfullscreen allow="encrypted-media; picture-in-picture"></iframe></div>`;
+      const dark = getComputedStyle(document.documentElement).colorScheme === "dark";
+      return `<div class="embed"><blockquote class="twitter-tweet" data-dnt="true" data-theme="${dark ? "dark" : "light"}"><a href="https://twitter.com/i/status/${m[1]}">${UI.esc(url)}</a></blockquote></div>`;
     }
+    if ((m = url.match(RE_YT))) {
+      const t = (url.match(/[?&](?:t|start)=(\d+)/) || [])[1];
+      return `<div class="embed yt"><iframe src="https://www.youtube-nocookie.com/embed/${m[1]}${t ? "?start=" + t : ""}" title="YouTube" loading="lazy" allowfullscreen allow="encrypted-media; picture-in-picture"></iframe></div>`;
+    }
+    if ((m = url.match(RE_BILI))) {
+      const id = m[1], page = (url.match(/[?&]p=(\d+)/) || [])[1] || 1;
+      const q = /^av/i.test(id) ? "aid=" + id.slice(2) : "bvid=" + id;
+      // sandbox：BiliBili のプレーヤーが記事ページごと移動してしまうのを防ぐ
+      return `<div class="embed yt"><iframe src="https://player.bilibili.com/player.html?${q}&p=${page}&autoplay=0&high_quality=1&danmaku=0" title="BiliBili" loading="lazy" allowfullscreen
+        sandbox="allow-scripts allow-same-origin allow-popups allow-presentation" allow="fullscreen; picture-in-picture"></iframe></div>`;
+    }
+    return "";
+  }
+  // 1行ぶんのノードが「URL だけ」ならその URL を返す（リンクになっていても、ただの文字でも OK）
+  function lineUrl(nodes) {
+    const els = nodes.filter(n => n.nodeType === 1), text = nodes.map(n => n.textContent).join("").trim();
+    if (!text || /\s/.test(text)) return "";
+    if (els.length === 1 && els[0].tagName === "A" && els[0].textContent.trim() === text) return els[0].href;
+    if (els.length === 0) return text.replace(/^<|>$/g, "");
+    return "";
+  }
+  prose.querySelectorAll("p").forEach(p => {
+    if (p.querySelector("img, code")) return;
+    // <br> で行に分ける
+    const lines = [[]];
+    p.childNodes.forEach(n => n.nodeName === "BR" ? lines.push([]) : lines[lines.length - 1].push(n));
+    const out = lines.map(ns => ({ ns, html: embedFor(lineUrl(ns)) }));
+    if (!out.some(o => o.html)) return;
+    // 埋め込みの行で段落を区切って作り直す
+    const frag = document.createDocumentFragment();
+    let para = null;
+    out.forEach(o => {
+      if (o.html) { para = null; const d = document.createElement("div"); d.innerHTML = o.html; frag.append(...d.childNodes); return; }
+      if (!o.ns.some(n => n.textContent.trim() || n.nodeType === 1)) return;
+      if (!para) { para = document.createElement("p"); frag.appendChild(para); } else para.appendChild(document.createElement("br"));
+      o.ns.forEach(n => para.appendChild(n));
+    });
+    p.replaceWith(frag);
   });
-  if (needX) { const s = document.createElement("script"); s.src = "https://platform.twitter.com/widgets.js"; s.async = true; document.body.appendChild(s); }
+  // X の「埋め込みコード」を貼ったせいで引用（> — 名前 (@id) 日付）になったものも、ツイートの埋め込みに戻す
+  prose.querySelectorAll("blockquote").forEach(bq => {
+    const a = [...bq.querySelectorAll("a")].pop();
+    if (!a || !RE_X.test(a.href) || !/—\s*[^\n]*\(@\w+\)/.test(bq.textContent)) return;
+    const d = document.createElement("div"); d.innerHTML = embedFor(a.href);
+    bq.replaceWith(...d.childNodes);
+  });
+  if (needX) { const s = document.createElement("script"); s.src = "https://platform.twitter.com/widgets.js"; s.async = true; s.charset = "utf-8"; document.body.appendChild(s); }
 
   // 大見出し（h2）・小見出し（h3）を読み取って目次を自動で作る（見出しが2つ以上あるとき）
   const hs = [...prose.querySelectorAll("h2, h3")];
