@@ -594,7 +594,6 @@ async function openEditor(path) {
   $("fSlug").value = cur ? cur.slug : (meta.slug || "");
   $("fDesc").value = meta.description || "";
   $("fPinned").setAttribute("aria-pressed", String(!!meta.pinned));
-  setPublic(meta.published !== false);
   $("tocPanel").hidden = true;
   setCover(meta.cover ? rawUrl(meta.cover) : "");
   editor.setMarkdown(toRaw(body).trim(), false);
@@ -604,24 +603,21 @@ async function openEditor(path) {
   checkBackup(meta, body);
   if (!cur) $("fTitle").focus();
 }
-const isPublic = () => $("fPublic").getAttribute("aria-pressed") === "true";
-function setPublic(on) {
-  $("fPublic").setAttribute("aria-pressed", String(on));
-  $("fPublicLabel").textContent = on ? "サイトに公開する" : "非公開（URL を知っていても見えません）";
-}
-$("fPublic").onclick = () => { setPublic(!isPublic()); dirty = true; setState(); backupSoon(); };
+// 記事の状態：draft = 下書き（_drafts）/ hidden = 非公開（_posts + published: false）/ public = 公開中
+const MODE_LABEL = { new: "新規", draft: "下書き", hidden: "非公開", public: "公開中" };
+const curMode = () => !cur ? "new" : cur.draft ? "draft" : cur.hidden ? "hidden" : "public";
 function postUrl(c) { return `/blog/${c.date.replace(/-/g, "/")}/${c.slug}/`; }
 function setState() {
-  const published = cur && !cur.draft && !cur.hidden;
-  $("state").textContent = (cur ? (cur.draft ? "下書き" : cur.hidden ? "非公開" : "公開中") : "新規") + (dirty ? " ・ 未保存" : "");
+  const mode = curMode(), published = mode === "public";
+  $("state").textContent = MODE_LABEL[mode] + (dirty ? " ・ 未保存" : "");
   const text = editor ? editor.getMarkdown().replace(/!\[[^\]]*\]\([^)]*\)/g, "").replace(/[#>*`_\-\[\]()]/g, "").replace(/\s+/g, "") : "";
   $("stats").textContent = `${text.length.toLocaleString()}文字・約${Math.max(1, Math.round(text.length / 500))}分` +
     (lastSaved ? `・${lastSaved.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })} 保存` : "");
   $("delBtn").hidden = !cur;
   $("viewBtn").hidden = !published;
   if (published) $("viewBtn").href = postUrl(cur);
-  $("draftBtn").textContent = published ? "下書きに戻す" : "下書き保存";
-  $("pubBtn").textContent = published ? "更新する" : isPublic() ? "公開する" : "非公開で保存";
+  $("draftBtn").textContent = published ? "公開をやめる ▾" : `${MODE_LABEL[mode === "new" ? "draft" : mode]}で保存 ▾`;
+  $("pubBtn").textContent = published ? "更新する" : "公開する";
 }
 function fitTitle() { const t = $("fTitle"); t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }
 $("fTitle").addEventListener("input", () => { fitTitle(); dirty = true; setState(); backupSoon(); });
@@ -872,11 +868,14 @@ addEventListener("pointerdown", hideMask, true);
 addEventListener("blur", hideMask);
 
 /* ---- 保存・削除 ---- */
-async function save(asDraft) {
+// mode: "draft" | "hidden" | "public"
+async function save(mode) {
   if (busy || !token) return;
   const title = $("fTitle").value.trim();
   if (!title) { toast("タイトルを入れてね"); $("fTitle").focus(); return; }
-  if (asDraft && cur && !cur.draft && !confirm("公開中の記事を下書きに戻します（サイトから消えます）。いいですか？")) return;
+  if (curMode() === "public" && mode !== "public" &&
+      !confirm(`公開中の記事を${MODE_LABEL[mode]}にします（サイトから消えます）。いいですか？`)) return;
+  const asDraft = mode === "draft", hidden = mode === "hidden";
   const date = /^\d{4}-\d{2}-\d{2}$/.test($("fDate").value) ? $("fDate").value : today();
   let slug = $("fSlug").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
   if (!slug) slug = "post-" + Date.now().toString(36);
@@ -885,7 +884,7 @@ async function save(asDraft) {
   const text = buildFM({
     title, tags: $("fTags").value.split(/[,、，]/).map(s => s.trim()).filter(Boolean),
     pinned: $("fPinned").getAttribute("aria-pressed") === "true" ? (curPick || true) : false,
-    cover: cover ? fromRaw(cover) : "", description: $("fDesc").value.trim(), hidden: !isPublic(),
+    cover: cover ? fromRaw(cover) : "", description: $("fDesc").value.trim(), hidden,
   }, extraMeta) + "\n\n" + md + "\n";
   const path = asDraft ? `_drafts/${slug}.md` : `_posts/${date}-${slug}.md`;
   const oldKey = backupKey();
@@ -897,9 +896,9 @@ async function save(asDraft) {
       const ex = await getFile(path, { allow404: true });
       if (ex) { if (!confirm("同じURLの記事がもうあります。上書きしますか？")) return; sha = ex.sha; }
     }
-    const res = await putFile(path, b64enc(text), `${asDraft ? "下書き" : "記事"}: ${title}`, sha);
+    const res = await putFile(path, b64enc(text), `${asDraft ? "下書き" : hidden ? "記事（非公開）" : "記事"}: ${title}`, sha);
     if (cur && cur.path !== path) await delFile(cur.path, cur.sha, `移動: ${title}`);
-    cur = { path, sha: res.content.sha, draft: asDraft, date, slug, hidden: !isPublic() };
+    cur = { path, sha: res.content.sha, draft: asDraft, date, slug, hidden };
     clearBackup(oldKey); clearBackup();
     dirty = false; lastSaved = new Date(); setState();
     history.replaceState(null, "", "#edit=" + encodeURIComponent(path));
@@ -920,15 +919,28 @@ async function save(asDraft) {
   } catch (e) { toast("保存できませんでした: " + e.message); }
   finally { busy = false; ["pubBtn", "draftBtn"].forEach(id => $(id).disabled = false); }
 }
-$("pubBtn").onclick = () => save(false);
-$("draftBtn").onclick = () => save(true);
+$("pubBtn").onclick = () => save("public");
+// 「保存 ▾」：下書き / 非公開 / 公開 を選んで保存（どの状態からでも行き来できる）
+$("draftBtn").onclick = async () => {
+  if (busy) return;
+  const now = curMode();
+  const opt = (x, icon, name, desc) =>
+    `<button type="button" class="opt${now === x ? " now" : ""}" data-x="${x}"><span>${icon}</span><div><b>${name}${now === x ? "（今の状態）" : ""}</b><small>${desc}</small></div></button>`;
+  const r = await dialog(`
+    <h3>どう保存する？</h3>
+    ${opt("draft", "📝", "下書き", "書きかけ置き場に保存。サイトには出ません")}
+    ${opt("hidden", "🔒", "非公開", "記事として保存。サイト・ブログ一覧・お知らせには出ません")}
+    ${opt("public", "🌐", "公開", "サイトに公開します")}
+    <div class="row" style="margin-top:12px"><span class="spacer"></span><button class="btn" data-x="">やめる</button></div>`);
+  if (r.value) save(r.value);
+};
 $("delBtn").onclick = async () => {
   if (!cur || !confirm(`「${$("fTitle").value}」を削除します。元に戻せません。よろしいですか？`)) return;
   try { await delFile(cur.path, cur.sha, `削除: ${$("fTitle").value}`); clearBackup(); dirty = false; toast("削除しました"); location.hash = ""; }
   catch (e) { toast("削除できませんでした: " + e.message); }
 };
 addEventListener("keydown", e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === "s" && !$("vEdit").hidden) { e.preventDefault(); save(!(cur && !cur.draft)); }
+  if ((e.ctrlKey || e.metaKey) && e.key === "s" && !$("vEdit").hidden) { e.preventDefault(); const m = curMode(); save(m === "new" ? "draft" : m); }
 });
 
 /* ================= プロジェクト ================= */
