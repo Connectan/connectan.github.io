@@ -117,7 +117,7 @@
     return "";
   }
   prose.querySelectorAll("p").forEach(p => {
-    if (p.querySelector("img, code")) return;
+    // 画像やコードと同じ段落にあっても、URL だけの行は埋め込みにする（画像・コードの行はそのまま残る）
     // <br> で行に分ける
     const lines = [[]];
     p.childNodes.forEach(n => n.nodeName === "BR" ? lines.push([]) : lines[lines.length - 1].push(n));
