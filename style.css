@@ -200,6 +200,7 @@ h2 small { font-size: 14px; color: var(--muted); font-weight: 500; margin-left: 
 .badge { font-size: 11px; padding: 2px 9px; border-radius: 999px; background: rgba(var(--edge), .3); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
 .badge.b-main, .badge.b-pick { background: var(--accent); color: #fff; border-color: transparent; font-weight: 700; }
 .badge.b-away { background: #f0a35e33; color: #d37a2a; border-color: #f0a35e55; }
+.badge.b-repair { background: #e5535333; color: #d23f3f; border-color: #e5535355; }
 .badge.b-fold { color: var(--accent); }
 .badge.b-done { color: var(--accent); }
 .badge.b-wip { background: #f0a35e33; color: #d37a2a; border-color: #f0a35e55; }
