@@ -1,7 +1,93 @@
-/* トップページの描画（中身は data.js） */
-(() => {
+/* トップページの描画（名前・SNS は data.js、それ以外の中身は data/home.json） */
+(async () => {
 const S = window.SITE, U = window.UI, { $, esc, ICON } = U;
 const I = U.I18N || window.I18N || { t: (k) => k, tx: (s) => s, spec: (s) => s }, T = I.t, tx = I.tx;
+const getJSON = (p) => fetch(U.BASE + p, { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
+
+/* ---------- data/home.json（管理画面の「トップ」「端末」で編集）を読み込む ---------- */
+const HOME = await getJSON("data/home.json");
+if (HOME && typeof HOME === "object") Object.assign(S, HOME);
+S.devices = Array.isArray(S.devices) ? S.devices : [];
+S.brands = S.brands || {};
+if (!Array.isArray(S.rotatingWords) || !S.rotatingWords.length) S.rotatingWords = ["ガジェット"];
+
+/* ---------- 文章の小さな書式：**太字**・[文字](URL)・URL・改行 ---------- */
+const safeUrl = (u) => /^(https?:\/\/|\/|#)/.test(u) ? u : "#";
+function rich(s) {
+  return esc(tx(String(s || "")))
+    .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, t, u) => `<a href="${safeUrl(u)}" target="_blank" rel="noopener">${t}</a>`)
+    .replace(/(^|[\s>])(https?:\/\/[^\s<]+)/g, (m, pre, u) => `${pre}<a href="${u}" target="_blank" rel="noopener">${u}</a>`)
+    .replace(/\n/g, "<br>");
+}
+const paras = (s) => String(s || "").split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+
+/* ---------- 埋め込み（ウィジェット用）：YouTube / BiliBili / Spotify / X ---------- */
+function embedFor(url) {
+  let m;
+  if ((m = url.match(/^https?:\/\/(?:www\.|m\.|music\.)?(?:youtube\.com\/(?:watch\?(?:\S*&)?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([\w-]{11})/)))
+    return `<div class="embed yt"><iframe src="https://www.youtube-nocookie.com/embed/${m[1]}" title="YouTube" loading="lazy" allowfullscreen allow="encrypted-media; picture-in-picture"></iframe></div>`;
+  if ((m = url.match(/^https?:\/\/(?:www\.|m\.)?bilibili\.com\/video\/(BV[0-9A-Za-z]{10}|av\d+)/i)))
+    return `<div class="embed yt"><iframe src="https://player.bilibili.com/player.html?${/^av/i.test(m[1]) ? "aid=" + m[1].slice(2) : "bvid=" + m[1]}&autoplay=0&high_quality=1&danmaku=0" title="BiliBili" loading="lazy" allowfullscreen sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"></iframe></div>`;
+  if ((m = url.match(/^https?:\/\/open\.spotify\.com\/(?:intl-[\w-]+\/)?(track|album|playlist|episode|show|artist)\/([0-9A-Za-z]{22})/)))
+    return `<div class="embed sp"><iframe src="https://open.spotify.com/embed/${m[1]}/${m[2]}" title="Spotify" height="${m[1] === "track" || m[1] === "episode" ? 152 : 352}" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe></div>`;
+  if ((m = url.match(/^https?:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/(?:i\/web|i|\w+)\/status(?:es)?\/(\d+)/))) {
+    if (!document.querySelector('script[src*="platform.twitter.com"]')) {
+      const sc = document.createElement("script"); sc.src = "https://platform.twitter.com/widgets.js"; sc.async = true; document.body.appendChild(sc);
+    }
+    return `<div class="embed"><blockquote class="twitter-tweet" data-dnt="true"><a href="https://twitter.com/i/status/${m[1]}">${esc(url)}</a></blockquote></div>`;
+  }
+  return url ? `<p class="lead"><a href="${esc(safeUrl(url))}" target="_blank" rel="noopener">${esc(url)}</a></p>` : "";
+}
+
+/* ---------- レイアウト：セクションの並び順・表示/非表示・ウィジェット ---------- */
+const SECS = ["picks", "about", "lineup", "history", "blog", "projects", "follow"];
+const W_LABEL = { text: "NOTE", links: "LINKS", image: "PHOTO", embed: "MEDIA" };
+function widgetEl(w) {
+  const sec = document.createElement("section");
+  sec.id = w.id; sec.className = "widget w-" + w.type;
+  let body = "";
+  if (w.type === "text") body = `<div class="glass about reveal tilt">${paras(w.text).map(p => `<p>${rich(p)}</p>`).join("")}</div>`;
+  else if (w.type === "links") body = `<div class="hero-links w-links reveal">${(w.links || []).filter(l => l && l.url).map(l =>
+      `<a class="pill glass" href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener">${esc(tx(l.label || l.url))}</a>`).join("")}</div>`;
+  else if (w.type === "image") body = w.image ? `<figure class="w-img reveal"><img src="${esc(safeUrl(w.image))}" alt="${esc(w.title || "")}" loading="lazy">${w.text ? `<figcaption>${rich(w.text)}</figcaption>` : ""}</figure>` : "";
+  else if (w.type === "embed") body = `<div class="reveal">${embedFor(String(w.url || "").trim())}</div>`;
+  sec.innerHTML = `<div class="eyebrow mono reveal" data-label="${esc(String(w.label || W_LABEL[w.type] || "").toUpperCase())}"></div>
+    ${w.title ? `<h2 class="reveal">${esc(tx(w.title))}</h2>` : ""}
+    ${w.lead ? `<p class="lead reveal">${rich(w.lead)}</p>` : ""}${body}`;
+  return sec;
+}
+(function applyLayout() {
+  const main = document.querySelector("main.wrap"); if (!main) return;
+  const lay = Array.isArray(S.layout) && S.layout.length ? S.layout : SECS.map(id => ({ id }));
+  const seen = new Set();
+  lay.forEach(it => {
+    if (!it || !it.id || seen.has(it.id)) return;
+    const el = SECS.includes(it.id) ? $(it.id) : (it.type ? widgetEl(it) : null);
+    if (!el) return;
+    seen.add(it.id);
+    if (it.hidden) { el.dataset.off = "1"; el.hidden = true; }
+    main.appendChild(el);
+  });
+  SECS.forEach(id => { if (!seen.has(id) && $(id)) main.appendChild($(id)); });   // 並び順に無い元のセクションは最後に
+  // 見出しの番号（01 — ABOUT など）を並び順に振り直す
+  let n = 0;
+  main.querySelectorAll(":scope > section").forEach(sec => {
+    const eb = sec.querySelector(":scope > .eyebrow"); if (!eb || sec.id === "picks") return;
+    if (!eb.dataset.label) eb.dataset.label = eb.textContent.split("—").pop().trim();
+    if (sec.dataset.off) return;
+    eb.textContent = `${String(++n).padStart(2, "0")} — ${eb.dataset.label}`;
+  });
+  // 隠したセクションはナビからも消す
+  document.querySelectorAll("nav .links a[data-sec]").forEach(a => { const s = $(a.dataset.sec); if (s && s.dataset.off) a.hidden = true; });
+})();
+
+/* ---------- ヒーローの一言・はじめましての文章（管理画面で変えたときだけ上書き） ---------- */
+if (S.sub) { const el = document.querySelector('[data-i18n="hero.sub"]'); if (el) el.innerHTML = rich(S.sub); }
+if (Array.isArray(S.about) && S.about.some(p => String(p).trim())) {
+  const box = document.querySelector("#about .about");
+  if (box) box.innerHTML = S.about.filter(p => String(p).trim()).map(p => `<p>${rich(p)}</p>`).join("");
+}
 
 /* ---------- hero ---------- */
 $("heroName").innerHTML = [...S.name].map((c, i) => c === " " ? " " : `<span class="ch" style="--i:${i}">${esc(c)}</span>`).join("");
@@ -25,7 +111,6 @@ setInterval(() => {
 }, 2600);
 
 /* ---------- プロジェクト・お知らせは data/*.json ---------- */
-const getJSON = (p) => fetch(U.BASE + p, { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
 const extra = Promise.all([getJSON("data/projects.json"), getJSON("data/news.json")]).then(([pj, nw]) => {
   if (Array.isArray(pj)) S.projects = pj;
   if (Array.isArray(nw)) S.news = nw;
@@ -205,7 +290,7 @@ U.loadPosts().then(posts => {
   // おすすめ（最大3つ）はページのいちばん上に。1番は大きく出す
   const picks = U.pickedPosts(posts).slice(0, 3);
   const latest = posts.filter(p => !picks.includes(p)).slice(0, 4);
-  if (picks.length) {
+  if (picks.length && !$("picks").dataset.off) {
     $("picksGrid").innerHTML = picks.map((p, i) => U.postCard(p, { big: i === 0, d: i })).join("");
     $("picks").hidden = false;
     U.reveal($("picks"));
