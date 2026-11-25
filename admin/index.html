@@ -21,6 +21,8 @@
   <!-- タブ -->
   <div class="tabs glass" id="tabs" hidden>
     <a href="#" data-tab="posts">📝 記事</a>
+    <a href="#home" data-tab="home">🏠 トップ</a>
+    <a href="#devices" data-tab="devices">📱 端末</a>
     <a href="#picks" data-tab="picks">⭐ おすすめ</a>
     <a href="#projects" data-tab="projects">🧩 プロジェクト</a>
     <a href="#news" data-tab="news">🔔 お知らせ</a>
@@ -77,6 +79,115 @@
       <button class="btn primary danger-fill" id="selDel" disabled>削除する</button>
     </div>
     <div class="plist" id="plist"><div class="glass panel muted">読み込み中…</div></div>
+  </div>
+
+  <!-- トップページ -->
+  <div id="vHome" hidden>
+    <div class="row head">
+      <h2>トップページ</h2>
+      <span class="spacer"></span>
+      <a class="btn glass" href="/" target="_blank" rel="noopener">トップを見る</a>
+    </div>
+    <p class="muted">並び順・表示/非表示・ウィジェットの追加ができます。変更したら下の「保存」でまとめて反映（1〜2分でサイトに出ます）。</p>
+
+    <h3 class="sub-h">レイアウト（上から順に表示）</h3>
+    <div class="plist" id="layList"></div>
+    <div class="row" style="margin:12px 0 4px"><span class="spacer"></span><button class="btn glass" id="addWidgetBtn">＋ ウィジェットを追加</button></div>
+
+    <div class="glass panel" id="wForm" hidden>
+      <h3 id="wfTitle">ウィジェット</h3>
+      <div class="grid2">
+        <div class="field">見出し<input type="text" id="wTitle" placeholder="最近ハマってる曲"></div>
+        <div class="field">小見出し（英字・番号の横に出る）<input type="text" id="wLabel" placeholder="MUSIC"></div>
+      </div>
+      <div class="field">見出しの下の一言（任意）<input type="text" id="wLead"></div>
+      <div class="field" data-wt="text">本文（空行で段落を分ける。**太字**・[文字](URL) が使えます）<textarea id="wText" rows="6"></textarea></div>
+      <div class="field" data-wt="links">リンク（1行に1つ「名前 | URL」）<textarea id="wLinks" rows="5" placeholder="YouTube | https://www.youtube.com/@xxx&#10;note | https://note.com/xxx"></textarea></div>
+      <div class="field" data-wt="image">画像
+        <div class="cover-box" id="wImgBox">
+          <img id="wImgPv" alt="" hidden>
+          <div class="cover-actions">
+            <button class="btn glass" type="button" id="wImgBtn">🖼 画像を選ぶ</button>
+            <button class="btn" type="button" id="wImgDel" hidden>外す</button>
+          </div>
+          <input type="file" id="wImgFile" accept="image/*" hidden>
+        </div>
+      </div>
+      <div class="field" data-wt="image">画像の説明（任意）<input type="text" id="wCaption"></div>
+      <div class="field" data-wt="embed">URL（YouTube・BiliBili・Spotify・X のどれか）<input type="text" id="wUrl" placeholder="https://open.spotify.com/track/..."></div>
+      <div class="row">
+        <button class="btn danger" id="wDel">削除</button>
+        <span class="spacer"></span>
+        <button class="btn glass" id="wCancel">やめる</button>
+        <button class="btn primary" id="wOk">OK</button>
+      </div>
+    </div>
+
+    <h3 class="sub-h">いちばん上（名前の下）</h3>
+    <div class="glass panel">
+      <div class="field">くるくる変わる言葉（「◯◯沼の住人。」の◯◯・カンマ区切り）<input type="text" id="hWords"></div>
+      <div class="field">その下の一言（空なら元の文章）<input type="text" id="hSub" placeholder="中華スマホとガジェットいじり、たまにコードとブログを書いてます。"></div>
+    </div>
+    <h3 class="sub-h">はじめまして（About）の文章</h3>
+    <div class="glass panel">
+      <div class="field">空行で段落を分ける。**太字** が使えます。空にすると元の文章（翻訳つき）に戻ります。<textarea id="hAbout" rows="8"></textarea></div>
+      <p class="muted small">※ ここを書き換えると、英語・中国語・韓国語で見ても、この文章（日本語）がそのまま出ます。</p>
+    </div>
+    <div class="row"><span class="spacer"></span><button class="btn primary" id="homeSave">保存</button></div>
+  </div>
+
+  <!-- 端末 -->
+  <div id="vDevices" hidden>
+    <div class="row head">
+      <h2>端末</h2>
+      <span class="spacer"></span>
+      <button class="btn primary" id="newDevBtn">＋ 追加</button>
+    </div>
+    <p class="muted">状態はプルダウンですぐ切り替えられます。上から「使ってきた順」に遍歴に並びます。変更したら下の「保存」でまとめて反映。</p>
+    <div class="glass panel" id="devForm" hidden>
+      <h3 id="dfTitle">端末を追加</h3>
+      <div class="grid2">
+        <div class="field">メーカー<input type="text" id="dMaker" placeholder="Xiaomi" list="dMakerList"></div>
+        <div class="field">端末名<input type="text" id="dName" placeholder="Xiaomi 15 Ultra"></div>
+        <div class="field">状態<select id="dStatus"></select></div>
+        <div class="field">地域・版（バッジ・任意）<input type="text" id="dRegion" placeholder="香港版"></div>
+      </div>
+      <div class="row" style="margin:0 0 14px">
+        <label class="switchrow"><button class="tog" id="dFold" type="button" aria-pressed="false"></button>折りたたみ</label>
+        <label class="switchrow"><button class="tog" id="dGiteki" type="button" aria-pressed="false"></button>技適あり（数に入れない）</label>
+      </div>
+      <div class="field">ひとことコメント（布陣・遍歴に出る）<input type="text" id="dNote"></div>
+      <div class="field">遍歴の区切り見出し（この端末の前に入る・任意）<input type="text" id="dChapter" placeholder="ここから技適なし沼"></div>
+      <details class="meta"><summary>スペック表（名前を押すと出る）</summary>
+        <div class="grid2">
+          <div class="field">SoC<input type="text" id="dSoc"></div>
+          <div class="field">発売年<input type="text" id="dYear" placeholder="2025"></div>
+        </div>
+        <div class="field">カメラ<input type="text" id="dCamera"></div>
+        <div class="field">ディスプレイ<input type="text" id="dDisplay"></div>
+        <div class="field">ひとこと<input type="text" id="dPoint"></div>
+      </details>
+      <div class="row">
+        <button class="btn danger" id="dDel" hidden>削除</button>
+        <span class="spacer"></span>
+        <button class="btn glass" id="dCancel">やめる</button>
+        <button class="btn primary" id="dOk">OK</button>
+      </div>
+    </div>
+    <datalist id="dMakerList"></datalist>
+    <div class="plist" id="devList"></div>
+
+    <h3 class="sub-h">布陣の日付</h3>
+    <div class="glass panel">
+      <div class="row"><input type="date" id="dDate" class="date-in"><button class="btn glass sm" id="dToday">今日にする</button></div>
+    </div>
+    <h3 class="sub-h">触ってきたメーカー（この数がトップに出る）</h3>
+    <div class="glass panel">
+      <div class="field">カンマ区切り<textarea id="dMakers" rows="3"></textarea></div>
+    </div>
+    <h3 class="sub-h">ブランド色</h3>
+    <div class="glass panel"><div class="colors" id="dColors"></div></div>
+    <div class="row"><span class="spacer"></span><button class="btn primary" id="devSave">保存</button></div>
   </div>
 
   <!-- おすすめ記事 -->
