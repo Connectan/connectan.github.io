@@ -240,12 +240,13 @@ document.addEventListener("click", e => { if (e.target.closest("[data-sns]")) $(
 
 /* ---------- lineup ---------- */
 $("lineupDate").textContent = T("lineup.asOf", { d: S.lineupDate });
-const order = { main: 0, active: 1, away: 2 };
+const order = { main: 0, active: 1, away: 2, repair: 3 };
 $("lineupGrid").innerHTML = D.filter(d => !gone(d)).sort((a, b) => order[a.status] - order[b.status]).map((d, i) => {
   const isMain = d.status === "main";
   const badges = [
     isMain ? `<span class="badge b-main">MAIN</span>` : "",
     d.status === "away" ? `<span class="badge b-away">${T("badge.away")}</span>` : "",
+    d.status === "repair" ? `<span class="badge b-repair">${T("st.repair")}</span>` : "",
     d.fold ? `<span class="badge b-fold">Foldable</span>` : "",
     d.region ? `<span class="badge">${esc(tx(d.region))}</span>` : "",
   ].join("");
@@ -267,7 +268,7 @@ $("legend").innerHTML = Object.entries(brandCount)
   .map(([b, n]) => `<span style="--brand:${S.brands[b] || "#888"}"><i></i>${esc(b)} <span class="mono">${n}</span></span>`).join("");
 
 /* ---------- timeline ---------- */
-const STATE = { main: T("st.main"), active: T("st.active"), away: T("st.away"), retired: T("st.retired"), recalled: T("st.recalled") };
+const STATE = { main: T("st.main"), active: T("st.active"), away: T("st.away"), retired: T("st.retired"), recalled: T("st.recalled"), repair: T("st.repair") };
 const tl = $("timeline");
 tl.innerHTML = D.map(d => `
   ${d.chapter ? `<li class="chapter"><span class="dot"></span><span class="item glass">${esc(tx(d.chapter))}</span></li>` : ""}
