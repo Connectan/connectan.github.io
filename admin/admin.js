@@ -7,7 +7,7 @@ const OWNER = "Connectan", REPO = "connectan.github.io", BRANCH = "main";
 const API = "https://api.github.com";
 const REPO_API = `${API}/repos/${OWNER}/${REPO}`;
 const RAW = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}`;
-const VAULT = "admin/vault.json", PROJECTS = "data/projects.json", NEWS = "data/news.json";
+const VAULT = "admin/vault.json", PROJECTS = "data/projects.json", NEWS = "data/news.json", HOME = "data/home.json";
 const ITER = 1000000;                 // PBKDF2 の回数
 const IDLE_MS = 30 * 60 * 1000;       // 30分操作がなければロック
 const AAD = new TextEncoder().encode("connectan.github.io/admin/v1");
@@ -129,7 +129,7 @@ async function tryUnlock(pin) {
 }
 
 /* ================= 画面 ================= */
-const VIEWS = ["vSetup", "vLogin", "vList", "vPicks", "vProjects", "vNews", "vSettings", "vEdit"];
+const VIEWS = ["vSetup", "vLogin", "vList", "vHome", "vDevices", "vPicks", "vProjects", "vNews", "vSettings", "vEdit"];
 function show(v, tab) {
   VIEWS.forEach(id => $(id).hidden = id !== v);
   $("tabs").hidden = !tab;
@@ -225,6 +225,8 @@ function route() {
   if (h === "new") openEditor(null);
   else if (h.startsWith("edit=")) openEditor(h.slice(5));
   else if (h === "settings") show("vSettings", "settings");
+  else if (h === "home") openHome();
+  else if (h === "devices") openDevices();
   else if (h === "picks") listPicks();
   else if (h === "projects") listProjects();
   else if (h === "news") listNews();
@@ -232,7 +234,8 @@ function route() {
 }
 addEventListener("hashchange", () => {
   if (!$("vEdit").hidden && dirty && !confirm("保存していない変更があります。移動しますか？（書きかけはこのブラウザに残っています）")) return;
-  dirty = false; route();
+  if ((homeDirty || devDirty) && !confirm("トップ／端末の変更がまだ保存されていません。移動すると消えます。いいですか？")) return;
+  dirty = false; homeDirty = devDirty = false; route();
 });
 $("newBtn").onclick = () => { pendingProject = null; location.hash = "new"; };
 
@@ -1196,6 +1199,261 @@ $("nAdd").onclick = () => busyBtn($("nAdd"), async () => {
   } catch (e) { toast(e.message); }
 });
 
+/* ================= トップページ・端末（data/home.json） ================= */
+const BUILTIN = { picks: "⭐ おすすめ記事", about: "👋 はじめまして（自己紹介・数字）", lineup: "📱 現在の布陣", history: "🕰 端末遍歴",
+  blog: "📝 ブログ", projects: "🧩 プロジェクト", follow: "💬 SNS" };
+const W_TYPES = {
+  text:  ["📝", "テキスト", "自由な文章（段落・太字・リンク）"],
+  links: ["🔗", "リンク集", "ボタンが並ぶ（YouTube チャンネル、note など）"],
+  image: ["🖼", "画像", "写真を1枚、大きく"],
+  embed: ["▶", "埋め込み", "YouTube・BiliBili・Spotify・X をそのまま再生/表示"],
+};
+const STATUS = { main: "メイン", active: "現役", away: "出張中", retired: "卒業", recalled: "メーカー回収" };
+let homeData = null, homeDirty = false, devDirty = false, wEditing = null, dEditing = null;
+
+async function loadHome() {
+  homeData = await readJSON(HOME, null);
+  if (!homeData) throw new Error("data/home.json が見つかりません");
+  homeData.devices = homeData.devices || []; homeData.layout = homeData.layout || [];
+  homeData.brands = homeData.brands || {}; homeData.makers = homeData.makers || [];
+  Object.keys(BUILTIN).forEach(id => { if (!homeData.layout.some(l => l.id === id)) homeData.layout.push({ id }); });
+}
+// 保存：画面で触った部分（keys）だけ最新の home.json に上書きする
+async function saveHome(keys, message, btn) {
+  await busyBtn(btn, async () => {
+    try {
+      const latest = await readJSON(HOME, {}) || {};
+      keys.forEach(k => { latest[k] = homeData[k]; });
+      await writeJSON(HOME, latest, message);
+      toast("保存しました（1〜2分でサイトに反映）");
+      homeDirty = devDirty = false;
+    } catch (e) { toast(e.message); }
+  });
+  markDirty();   // busyBtn がボタンの文字を戻したあとに付け直す
+}
+function markDirty() {
+  ["homeSave", "devSave"].forEach(id => {
+    const d = id === "homeSave" ? homeDirty : devDirty;
+    $(id).textContent = d ? "保存（未保存の変更あり）" : "保存";
+  });
+}
+addEventListener("beforeunload", e => { if (homeDirty || devDirty) { e.preventDefault(); e.returnValue = ""; } });
+
+/* ---- 🏠 トップ ---- */
+async function openHome() {
+  show("vHome", "home");
+  $("wForm").hidden = true;
+  $("layList").innerHTML = `<div class="glass panel muted">読み込み中…</div>`;
+  try {
+    await loadHome();
+    $("hWords").value = (homeData.rotatingWords || []).join(", ");
+    $("hSub").value = homeData.sub || "";
+    $("hAbout").value = (homeData.about || []).join("\n\n");
+    homeDirty = false; markDirty(); renderLayout();
+  } catch (e) { $("layList").innerHTML = `<div class="glass panel err">${esc(e.message)}</div>`; }
+}
+function renderLayout() {
+  const L = homeData.layout;
+  $("layList").innerHTML = L.map((it, i) => {
+    const w = !BUILTIN[it.id], t = w ? W_TYPES[it.type] || ["❔", "?"] : null;
+    const name = w ? `${t[0]} ${esc(it.title || t[1])}` : esc(BUILTIN[it.id]);
+    return `<div class="glass pitem ${it.hidden ? "off" : ""}">
+      <div class="t ${w ? "click" : ""}" ${w ? `data-wedit="${i}"` : ""}>${name}<small>${w ? "ウィジェット：" + t[1] : "元からあるセクション"}</small></div>
+      <button class="btn sm glass" data-hide="${i}">${it.hidden ? "🙈 非表示" : "👀 表示"}</button>
+      <button class="btn sm" data-mv="${i}" data-d="-1" ${i ? "" : "disabled"} title="上へ">↑</button>
+      <button class="btn sm" data-mv="${i}" data-d="1" ${i < L.length - 1 ? "" : "disabled"} title="下へ">↓</button>
+      ${w ? `<button class="btn sm" data-wedit="${i}">編集</button>` : ""}
+    </div>`;
+  }).join("");
+}
+$("layList").onclick = (e) => {
+  const b = e.target.closest("[data-hide],[data-mv],[data-wedit]"); if (!b) return;
+  const L = homeData.layout;
+  if (b.dataset.wedit !== undefined) return openWidget(+b.dataset.wedit);
+  if (b.dataset.hide !== undefined) { const it = L[+b.dataset.hide]; it.hidden = !it.hidden; if (!it.hidden) delete it.hidden; }
+  else { const i = +b.dataset.mv, j = i + +b.dataset.d; if (j < 0 || j >= L.length) return; [L[i], L[j]] = [L[j], L[i]]; }
+  homeDirty = true; markDirty(); renderLayout();
+};
+["hWords", "hSub", "hAbout"].forEach(id => $(id).addEventListener("input", () => { homeDirty = true; markDirty(); }));
+
+$("addWidgetBtn").onclick = async () => {
+  const r = await dialog(`<h3>どのウィジェットを追加する？</h3>
+    ${Object.entries(W_TYPES).map(([k, [ic, n, d]]) => `<button class="opt" data-x="${k}"><span>${ic}</span><div><b>${n}</b><small>${d}</small></div></button>`).join("")}
+    <div class="row" style="margin-top:12px"><span class="spacer"></span><button class="btn" data-x="">やめる</button></div>`);
+  if (!r.value) return;
+  openWidget(null, r.value);
+};
+let wImg = "";
+function setWImg(url) {
+  wImg = url;
+  $("wImgPv").hidden = !url; if (url) $("wImgPv").src = url; else $("wImgPv").removeAttribute("src");
+  $("wImgBox").classList.toggle("has", !!url); $("wImgDel").hidden = !url;
+  $("wImgBtn").textContent = url ? "🖼 変更" : "🖼 画像を選ぶ";
+}
+function openWidget(i, type) {
+  const w = i == null ? { type } : homeData.layout[i];
+  wEditing = i;
+  $("wForm").dataset.type = w.type;
+  $("wfTitle").textContent = `${W_TYPES[w.type][0]} ${W_TYPES[w.type][1]}を${i == null ? "追加" : "編集"}`;
+  document.querySelectorAll("#wForm [data-wt]").forEach(el => el.hidden = el.dataset.wt !== w.type);
+  $("wTitle").value = w.title || ""; $("wLabel").value = w.label || ""; $("wLead").value = w.lead || "";
+  $("wText").value = w.type === "text" ? w.text || "" : ""; $("wCaption").value = w.type === "image" ? w.text || "" : "";
+  $("wLinks").value = (w.links || []).map(l => `${l.label} | ${l.url}`).join("\n");
+  $("wUrl").value = w.url || "";
+  setWImg(w.image ? rawUrl(w.image) : "");
+  $("wDel").hidden = i == null;
+  $("wForm").hidden = false; $("wTitle").focus();
+  $("wForm").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("wImgBtn").onclick = () => $("wImgFile").click();
+$("wImgDel").onclick = () => setWImg("");
+$("wImgFile").onchange = async (e) => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  const url = await imagePipeline(f, { title: "ウィジェットの画像をトリミング" });
+  if (url) setWImg(url);
+};
+$("wCancel").onclick = () => { $("wForm").hidden = true; };
+$("wDel").onclick = () => {
+  if (wEditing == null) return;
+  const w = homeData.layout[wEditing];
+  if (!confirm(`ウィジェット「${w.title || W_TYPES[w.type][1]}」を消しますか？（「保存」を押すまでサイトは変わりません）`)) return;
+  homeData.layout.splice(wEditing, 1);
+  $("wForm").hidden = true; homeDirty = true; markDirty(); renderLayout();
+};
+$("wOk").onclick = () => {
+  const type = $("wForm").dataset.type;
+  const w = { id: wEditing == null ? "w-" + Date.now().toString(36) : homeData.layout[wEditing].id, type };
+  const title = $("wTitle").value.trim(), label = $("wLabel").value.trim(), lead = $("wLead").value.trim();
+  if (title) w.title = title; if (label) w.label = label; if (lead) w.lead = lead;
+  if (type === "text") { w.text = $("wText").value.trim(); if (!w.text) return toast("本文を入れてね"); }
+  if (type === "links") {
+    w.links = $("wLinks").value.split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+      const k = l.lastIndexOf("|"); const label = k >= 0 ? l.slice(0, k).trim() : "", url = (k >= 0 ? l.slice(k + 1) : l).trim();
+      return { label: label || url, url };
+    });
+    if (!w.links.length) return toast("リンクを1つ以上入れてね");
+    const bad = w.links.find(l => !/^(https:\/\/|\/)/.test(l.url)); if (bad) return toast(`「${bad.url}」は https:// か / で始めてね`);
+  }
+  if (type === "image") { if (!wImg) return toast("画像を選んでね"); w.image = fromRaw(wImg); const c = $("wCaption").value.trim(); if (c) w.text = c; }
+  if (type === "embed") {
+    w.url = $("wUrl").value.trim();
+    if (!/^https:\/\/(www\.|m\.|mobile\.|music\.)?(x\.com|twitter\.com|youtube\.com|youtu\.be|bilibili\.com|open\.spotify\.com)\//.test(w.url)) return toast("YouTube・BiliBili・Spotify・X の URL を入れてね");
+  }
+  if (wEditing == null) {
+    w.hidden = undefined; delete w.hidden;
+    const at = homeData.layout.findIndex(l => l.id === "follow");   // 新しいウィジェットは SNS の手前に
+    homeData.layout.splice(at < 0 ? homeData.layout.length : at, 0, w);
+  } else { if (homeData.layout[wEditing].hidden) w.hidden = true; homeData.layout[wEditing] = w; }
+  $("wForm").hidden = true; homeDirty = true; markDirty(); renderLayout();
+  toast("並びに入れました。「保存」でサイトに反映");
+};
+$("homeSave").onclick = () => {
+  if (!homeData) return;
+  homeData.rotatingWords = $("hWords").value.split(/[,、，]/).map(s => s.trim()).filter(Boolean);
+  if (!homeData.rotatingWords.length) return toast("くるくる変わる言葉を1つ以上入れてね");
+  homeData.sub = $("hSub").value.trim();
+  homeData.about = $("hAbout").value.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+  saveHome(["rotatingWords", "sub", "about", "layout"], "トップページを更新", $("homeSave"));
+};
+
+/* ---- 📱 端末 ---- */
+const slashDate = (d) => String(d || "").replace(/-/g, "/");
+async function openDevices() {
+  show("vDevices", "devices");
+  $("devForm").hidden = true;
+  $("devList").innerHTML = `<div class="glass panel muted">読み込み中…</div>`;
+  try {
+    await loadHome();
+    $("dDate").value = String(homeData.lineupDate || "").replace(/\//g, "-");
+    $("dMakers").value = homeData.makers.join(", ");
+    devDirty = false; markDirty(); renderDevices();
+  } catch (e) { $("devList").innerHTML = `<div class="glass panel err">${esc(e.message)}</div>`; }
+}
+const statusOpts = (v) => Object.entries(STATUS).map(([k, n]) => `<option value="${k}" ${k === v ? "selected" : ""}>${n}</option>`).join("");
+function renderDevices() {
+  const D = homeData.devices;
+  $("devList").innerHTML = D.length ? D.map((d, i) => `
+    <div class="glass pitem ${d.status === "retired" || d.status === "recalled" ? "off" : ""}">
+      <span class="dot" style="background:${esc(homeData.brands[d.maker] || "#888")}"></span>
+      <div class="t click" data-dedit="${i}">${d.chapter ? `<span class="chap">― ${esc(d.chapter)}</span>` : ""}${esc(d.name)}
+        <small>${esc(d.maker)}${d.fold ? " ・ 折りたたみ" : ""}${d.giteki ? " ・ 技適あり" : ""}${d.region ? " ・ " + esc(d.region) : ""}${d.note ? " ・ " + esc(d.note) : ""}</small></div>
+      <select data-st="${i}" aria-label="状態">${statusOpts(d.status)}</select>
+      <button class="btn sm" data-dmv="${i}" data-d="-1" ${i ? "" : "disabled"} title="上へ">↑</button>
+      <button class="btn sm" data-dmv="${i}" data-d="1" ${i < D.length - 1 ? "" : "disabled"} title="下へ">↓</button>
+      <button class="btn sm" data-dedit="${i}">編集</button>
+    </div>`).join("") : `<div class="glass panel muted">まだありません</div>`;
+  // ブランド色：端末とメーカー一覧に出てくるメーカー全部
+  const makers = [...new Set(D.map(d => d.maker).filter(Boolean))];
+  $("dColors").innerHTML = makers.map(m => `<label><input type="color" data-color="${esc(m)}" value="${esc(/^#[0-9a-f]{6}$/i.test(homeData.brands[m] || "") ? homeData.brands[m] : "#888888")}">${esc(m)}</label>`).join("");
+  $("dMakerList").innerHTML = makers.map(m => `<option value="${esc(m)}">`).join("");
+}
+const devChanged = () => { devDirty = true; markDirty(); };
+$("devList").addEventListener("change", e => {
+  const s = e.target.closest("[data-st]"); if (!s) return;
+  const d = homeData.devices[+s.dataset.st];
+  if (s.value === "main" && d.status !== "main") {   // メインは1台だけ。前のメインは現役に
+    homeData.devices.forEach(x => { if (x !== d && x.status === "main") x.status = "active"; });
+  }
+  d.status = s.value; devChanged(); renderDevices();
+});
+$("devList").onclick = (e) => {
+  const b = e.target.closest("[data-dmv],[data-dedit]"); if (!b) return;
+  if (b.dataset.dedit !== undefined) return openDevForm(+b.dataset.dedit);
+  const D = homeData.devices, i = +b.dataset.dmv, j = i + +b.dataset.d; if (j < 0 || j >= D.length) return;
+  [D[i], D[j]] = [D[j], D[i]]; devChanged(); renderDevices();
+};
+$("dColors").addEventListener("input", e => { const c = e.target.closest("[data-color]"); if (c) { homeData.brands[c.dataset.color] = c.value; devChanged(); } });
+$("dColors").addEventListener("change", () => renderDevices());
+["dDate", "dMakers"].forEach(id => $(id).addEventListener("input", devChanged));
+$("dToday").onclick = () => { $("dDate").value = today(); devChanged(); };
+const togOn = (id) => $(id).getAttribute("aria-pressed") === "true";
+["dFold", "dGiteki"].forEach(id => $(id).onclick = () => $(id).setAttribute("aria-pressed", String(!togOn(id))));
+$("dStatus").innerHTML = statusOpts("active");
+function openDevForm(i) {
+  const d = i == null ? { status: "active", spec: {} } : homeData.devices[i], s = d.spec || {};
+  dEditing = i;
+  $("dfTitle").textContent = i == null ? "端末を追加" : "端末を編集";
+  $("dMaker").value = d.maker || ""; $("dName").value = d.name || ""; $("dStatus").value = d.status || "active";
+  $("dRegion").value = d.region || ""; $("dNote").value = d.note || ""; $("dChapter").value = d.chapter || "";
+  $("dFold").setAttribute("aria-pressed", String(!!d.fold)); $("dGiteki").setAttribute("aria-pressed", String(!!d.giteki));
+  $("dSoc").value = s.soc || ""; $("dYear").value = s.year || ""; $("dCamera").value = s.camera || ""; $("dDisplay").value = s.display || ""; $("dPoint").value = s.point || "";
+  $("dDel").hidden = i == null;
+  $("devForm").hidden = false; $("dMaker").focus();
+  $("devForm").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("newDevBtn").onclick = () => openDevForm(null);
+$("dCancel").onclick = () => { $("devForm").hidden = true; };
+$("dDel").onclick = () => {
+  if (dEditing == null) return;
+  const d = homeData.devices[dEditing];
+  if (!confirm(`「${d.name}」を消しますか？（卒業ならプルダウンで「卒業」にするのがおすすめ。「保存」を押すまでサイトは変わりません）`)) return;
+  homeData.devices.splice(dEditing, 1); $("devForm").hidden = true; devChanged(); renderDevices();
+};
+$("dOk").onclick = () => {
+  const maker = $("dMaker").value.trim(), name = $("dName").value.trim();
+  if (!maker || !name) return toast("メーカーと端末名を入れてね");
+  const old = dEditing == null ? {} : homeData.devices[dEditing];
+  const d = { ...old, maker, name, status: $("dStatus").value };
+  const opt = { region: $("dRegion").value.trim(), note: $("dNote").value.trim(), chapter: $("dChapter").value.trim() };
+  Object.entries(opt).forEach(([k, v]) => { if (v || k === "note") d[k] = v; else delete d[k]; });
+  if (togOn("dFold")) d.fold = true; else delete d.fold;
+  if (togOn("dGiteki")) d.giteki = true; else delete d.giteki;
+  const spec = { soc: $("dSoc").value.trim(), year: $("dYear").value.trim(), camera: $("dCamera").value.trim(), display: $("dDisplay").value.trim(), point: $("dPoint").value.trim() };
+  Object.keys(spec).forEach(k => { if (!spec[k]) delete spec[k]; });
+  if (Object.keys(spec).length) d.spec = spec; else delete d.spec;
+  if (d.status === "main") homeData.devices.forEach(x => { if (x !== old && x.status === "main") x.status = "active"; });
+  if (dEditing == null) homeData.devices.push(d); else homeData.devices[dEditing] = d;
+  if (!homeData.brands[maker]) homeData.brands[maker] = "#888888";
+  $("devForm").hidden = true; devChanged(); renderDevices();
+  toast("一覧に入れました。「保存」でサイトに反映");
+};
+$("devSave").onclick = () => {
+  if (!homeData) return;
+  homeData.lineupDate = slashDate($("dDate").value);
+  homeData.makers = [...new Set($("dMakers").value.split(/[,、，\n]/).map(s => s.trim()).filter(Boolean))];
+  saveHome(["devices", "lineupDate", "makers", "brands"], "端末を更新", $("devSave"));
+};
+
 /* ================= デモ（localhost だけ） ================= */
 const demoFiles = {
   "data/projects.json": { content: b64enc(JSON.stringify([{ id: "screen-off", name: "画面のみオフ", status: "done", public: true, date: "", repo: "", page: "", desc: "画面だけを消すアプリ。" }])), sha: "p1" },
@@ -1211,6 +1469,7 @@ function demoApi(url, opts) {
   if (opts.method === "DELETE") { delete demoFiles[p]; return null; }
   if (p === "_posts" || p === "_drafts") return Object.keys(demoFiles).filter(k => k.startsWith(p + "/")).map(k => ({ name: k.split("/").pop(), path: k }));
   if (demoFiles[p]) return { content: demoFiles[p].content, sha: demoFiles[p].sha };
+  if (p === HOME) return fetch("/" + HOME, { cache: "no-store" }).then(r => r.text()).then(t => (demoFiles[p] = { content: b64enc(t), sha: "h1" }));
   if (opts.allow404) return null;
   const e = new Error("404"); e.status = 404; throw e;
 }
