@@ -103,14 +103,15 @@ document.addEventListener("click", e => {
 /* ---------- stats（技適なしだけ数える） ---------- */
 const D = S.devices;
 const color = (d) => S.brands[d.maker] || "#888";
+const gone = (d) => d.status === "retired" || d.status === "recalled";   // もう手元にない（卒業・メーカー回収）
 const ng = D.filter(d => !d.giteki);
 const brandCount = {};
 ng.forEach(d => brandCount[d.maker] = (brandCount[d.maker] || 0) + 1);
 const stats = [
   [ng.length, T("stats.all")],
-  [ng.filter(d => d.status !== "retired").length, T("stats.now")],
+  [ng.filter(d => !gone(d)).length, T("stats.now")],
   [ng.filter(d => d.fold).length, T("stats.fold")],
-  [Object.keys(brandCount).length, T("stats.makers")],
+  [(S.makers || Object.keys(brandCount)).length, T("stats.makers")],
 ];
 $("stats").innerHTML = stats.map(([n, l], i) =>
   `<div class="glass stat tilt reveal" style="--d:${i}"><b class="mono" data-count="${n}">0</b><span>${l}</span></div>`).join("");
@@ -155,7 +156,7 @@ document.addEventListener("click", e => { if (e.target.closest("[data-sns]")) $(
 /* ---------- lineup ---------- */
 $("lineupDate").textContent = T("lineup.asOf", { d: S.lineupDate });
 const order = { main: 0, active: 1, away: 2 };
-$("lineupGrid").innerHTML = D.filter(d => d.status !== "retired").sort((a, b) => order[a.status] - order[b.status]).map((d, i) => {
+$("lineupGrid").innerHTML = D.filter(d => !gone(d)).sort((a, b) => order[a.status] - order[b.status]).map((d, i) => {
   const isMain = d.status === "main";
   const badges = [
     isMain ? `<span class="badge b-main">MAIN</span>` : "",
@@ -181,11 +182,11 @@ $("legend").innerHTML = Object.entries(brandCount)
   .map(([b, n]) => `<span style="--brand:${S.brands[b] || "#888"}"><i></i>${esc(b)} <span class="mono">${n}</span></span>`).join("");
 
 /* ---------- timeline ---------- */
-const STATE = { main: T("st.main"), active: T("st.active"), away: T("st.away"), retired: T("st.retired") };
+const STATE = { main: T("st.main"), active: T("st.active"), away: T("st.away"), retired: T("st.retired"), recalled: T("st.recalled") };
 const tl = $("timeline");
 tl.innerHTML = D.map(d => `
   ${d.chapter ? `<li class="chapter"><span class="dot"></span><span class="item glass">${esc(tx(d.chapter))}</span></li>` : ""}
-  <li class="${d.status !== "retired" ? "now" : ""} ${d.giteki ? "giteki" : ""}" style="--brand:${color(d)}">
+  <li class="${!gone(d) ? "now" : ""} ${d.giteki ? "giteki" : ""}" style="--brand:${color(d)}">
     <span class="dot"></span>
     <div class="item">
       ${devName(d, "t-name")}<span class="t-maker">${esc(d.maker)}</span>
