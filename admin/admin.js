@@ -1208,7 +1208,7 @@ const W_TYPES = {
   image: ["🖼", "画像", "写真を1枚、大きく"],
   embed: ["▶", "埋め込み", "YouTube・BiliBili・Spotify・X をそのまま再生/表示"],
 };
-const STATUS = { main: "メイン", active: "現役", away: "出張中", retired: "卒業", recalled: "メーカー回収" };
+const STATUS = { main: "メイン", active: "現役", away: "出張中", repair: "修理中", retired: "卒業", recalled: "メーカー回収" };
 let homeData = null, homeDirty = false, devDirty = false, wEditing = null, dEditing = null;
 
 async function loadHome() {
