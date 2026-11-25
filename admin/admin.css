@@ -159,3 +159,15 @@ body.editing .admin { padding-bottom: 200px; }
 .plist.selecting .pitem.sel { outline: 2px solid #e03b3b; outline-offset: -2px; }
 .plist.selecting .pitem.sel .chk { background: #e03b3b; border-color: #e03b3b; }
 .plist.selecting .pitem.sel .chk::after { content: "✓"; }
+
+/* トップ・端末 */
+.pitem select, .date-in { font: inherit; font-size: 13px; color: var(--text); padding: 6px 10px; border-radius: 10px; border: 1px solid var(--line); background: rgba(var(--g-rgb), .6); }
+.date-in { font-size: 15px; padding: 9px 12px; }
+.pitem .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px var(--line); }
+.pitem .kind { font-size: 11px; padding: 3px 8px; border-radius: 999px; background: rgba(127,127,127,.15); color: var(--muted); flex: none; }
+.pitem .chap { display: block; font-size: 11px; color: var(--accent); font-weight: 700; }
+.colors { display: flex; flex-wrap: wrap; gap: 10px 18px; }
+.colors label { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.colors input[type=color] { width: 34px; height: 28px; border: 1px solid var(--line); border-radius: 8px; padding: 0; background: none; cursor: pointer; }
+.dirty-note { color: #e0973b; font-size: 13px; font-weight: 700; }
+@media (max-width: 640px) { .pitem { flex-wrap: wrap; } .pitem .t { flex-basis: 60%; } }
