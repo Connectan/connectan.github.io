@@ -123,7 +123,7 @@ window.SITE = {
   brands: {
     vivo: "#415fff", iQOO: "#f5a623", Xiaomi: "#ff6900", realme: "#e6c200",
     Honor: "#00b3b3", Huawei: "#cf0a2c", Sony: "#8a8f98", ZTE: "#0a7cff",
-    Nothing: "#d71921",
+    Nothing: "#ffffff",
   },
 
   // ---- プロジェクト・お知らせ ---------------------------------------
