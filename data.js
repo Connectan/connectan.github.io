@@ -13,7 +13,12 @@ window.SITE = {
   rotatingWords: ["技適なしスマホ", "中華スマホ", "折りたたみ", "香港版", "ガジェット"],
 
   // 布陣の更新日
-  lineupDate: "2026/11/20",
+  lineupDate: "2026/11/25",
+
+  // 触ってきたメーカー（「触ってきたメーカー」の数はこのリストの数。技適あり・なし両方）
+  // Huawei は技適ありの頃も技適なしも触ってるけど、メーカーとしては1つ
+  makers: ["AQUOS", "Xperia", "Huawei", "OPPO", "ASUS", "UMIDIGI", "POCO", "Xiaomi",
+           "ZTE", "vivo", "Honor", "realme", "iQOO", "Nothing"],
 
   // ---- SNS ----------------------------------------------------------
   // name: 表示する名前 / url: プロフィールのURL / id: コピー用ID / qr: QRコード画像
@@ -28,7 +33,7 @@ window.SITE = {
 
   // ---- 端末 ---------------------------------------------------------
   // 使ってきた順に並べる。
-  // status : "main" メイン / "active" 現役 / "away" 手元にない / "retired" 卒業
+  // status : "main" メイン / "active" 現役 / "away" 手元にない / "retired" 卒業 / "recalled" メーカー回収
   // giteki : true = 技適あり端末（カウンターには数えない）
   // fold   : true = 折りたたみ
   // chapter: タイムラインのここに見出しを入れる
@@ -65,7 +70,7 @@ window.SITE = {
               camera: "108MP（HM6）＋ 2MP 深度",
               display: "6.78インチ 1.5K 曲面有機EL 120Hz",
               point: "5800mAhで厚さ約7.98mm。物理的バグ。" } },
-    { maker: "Xiaomi", name: "Xiaomi MIX Fold 2",  status: "retired", fold: true, note: "",
+    { maker: "Xiaomi", name: "Xiaomi MIX Fold 2",  status: "recalled", fold: true, note: "",
       spec: { soc: "Snapdragon 8+ Gen 1", year: "2022",
               camera: "50MP（IMX766）＋ 13MP 超広角 ＋ 8MP 2x 望遠（Leica）",
               display: "メイン 8.02インチ / カバー 6.56インチ",
@@ -76,12 +81,12 @@ window.SITE = {
               display: "6.78インチ 1.5K 有機EL 144Hz",
               point: "8 Gen 3 にペリスコープ望遠まで載せた価格破壊。" } },
     { maker: "Sony",   name: "Xperia 1 V",         status: "retired", giteki: true,
-      note: "技適あるからちょっとな。…でも多分また買う。",
+      note: "",
       spec: { soc: "Snapdragon 8 Gen 2", year: "2023",
               camera: "48MP（Exmor T for mobile）＋ 12MP 超広角 ＋ 12MP 光学ズーム望遠（85–125mm）",
               display: "6.5インチ 4K 有機EL 120Hz（21:9）",
               point: "Exmor T と光学ズーム。イヤホンジャックもSDも残ってる。" } },
-    { maker: "Huawei", name: "Huawei Mate Xs2",    status: "active",  fold: true, note: "",
+    { maker: "Huawei", name: "Huawei Mate Xs2",    status: "retired", fold: true, note: "",
       spec: { soc: "Snapdragon 888 4G", year: "2022",
               camera: "50MP ＋ 13MP 超広角 ＋ 8MP 3x 望遠",
               display: "7.8インチ 外折り有機EL（閉じて6.5インチ）",
@@ -107,12 +112,18 @@ window.SITE = {
               camera: "50MP（GNV）＋ 48MP 超広角 ＋ 12MP 2x ジンバル ＋ 8MP 5x ペリスコープ（ZEISS）",
               display: "6.78インチ 2K 有機EL LTPO 120Hz",
               point: "V1+ チップと ZEISS の4眼。夜景が強い。" } },
+    { maker: "Nothing", name: "Nothing Phone (3)", status: "active",  giteki: true, note: "",
+      spec: { soc: "Snapdragon 8s Gen 4", year: "2025",
+              camera: "50MP ＋ 50MP 3x ペリスコープ ＋ 50MP 超広角",
+              display: "6.67インチ 1.5K 有機EL 120Hz",
+              point: "背面のドット表示「Glyph Matrix」。光る背面で遊べる。" } },
   ],
 
   // メーカーの色
   brands: {
     vivo: "#415fff", iQOO: "#f5a623", Xiaomi: "#ff6900", realme: "#e6c200",
     Honor: "#00b3b3", Huawei: "#cf0a2c", Sony: "#8a8f98", ZTE: "#0a7cff",
+    Nothing: "#d71921",
   },
 
   // ---- プロジェクト・お知らせ ---------------------------------------
